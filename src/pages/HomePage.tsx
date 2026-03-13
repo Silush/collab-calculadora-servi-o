@@ -90,9 +90,9 @@ export function HomePage() {
         .then((data) => {
           reset(data.inputs);
           setActiveSimulationId(data.id);
-          toast.success(`Simulação de ${data.inputs.companyName} carregada via link.`);
+          toast.success(`Simulação de ${data.inputs.companyName} carregada.`);
         })
-        .catch(() => toast.error("Não foi possível carregar a simulação compartilhada."))
+        .catch(() => toast.error("Não foi possível carregar a simulação."))
         .finally(() => setIsInitialLoading(false));
     }
   }, [searchParams, reset]);
@@ -116,7 +116,7 @@ export function HomePage() {
     onError: (err) => toast.error(`Erro ao salvar: ${err.message}`)
   });
   const handleSave = () => {
-    if (!formValues.companyName) return toast.error("Nome da empresa é obrigatório para salvar.");
+    if (!formValues.companyName) return toast.error("Nome da empresa é obrigatório.");
     const record: SimulationRecord = {
       id: activeSimulationId || crypto.randomUUID(),
       timestamp: Date.now(),
@@ -135,18 +135,26 @@ export function HomePage() {
     <div className="min-h-screen bg-slate-50/50 dark:bg-background print:bg-white">
       <ThemeToggle />
       <Toaster richColors closeButton position="top-center" />
-      <header className="border-b bg-white/80 backdrop-blur-md dark:bg-card/80 sticky top-0 z-50 print:hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <CollabLogo size={32} />
-            <div>
-              <h1 className="text-lg font-black tracking-tight text-slate-900 dark:text-white">DealDesk</h1>
+      <header className="border-b bg-white/90 backdrop-blur-md dark:bg-card/90 sticky top-0 z-50 print:hidden h-20 flex items-center shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <CollabLogo size={48} className="glow-lg" />
+            <div className="flex flex-col">
+              <h1 className="text-xl font-black tracking-tighter text-slate-900 dark:text-white leading-none">
+                <span className="inline sm:hidden">Collab</span>
+                <span className="hidden sm:inline">Collab Gestão Empresarial</span>
+              </h1>
+              <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-blue-600 dark:text-blue-400 mt-1">
+                Diagnostic & Pricing Engine
+              </span>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <HistoryDrawer onLoad={(rec) => { reset(rec.inputs); setActiveSimulationId(rec.id); }} />
-            <Button variant="ghost" size="sm" onClick={handleReset}><RefreshCcw className="w-4 h-4 mr-2" /> Novo</Button>
-            <Button variant="default" size="sm" onClick={handleSave} disabled={saveMutation.isPending}>
+            <Button variant="ghost" size="sm" onClick={handleReset} className="hidden md:flex">
+              <RefreshCcw className="w-4 h-4 mr-2" /> Novo
+            </Button>
+            <Button variant="default" size="sm" onClick={handleSave} disabled={saveMutation.isPending} className="font-bold">
               {saveMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
               Salvar
             </Button>

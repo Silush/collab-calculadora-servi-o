@@ -6,22 +6,19 @@ interface CollabLogoProps {
   printSize?: number;
   glow?: boolean;
 }
-export function CollabLogo({ className, size = 40, printSize, glow = true }: CollabLogoProps) {
+export function CollabLogo({ className, size = 40, printSize = 80, glow = true }: CollabLogoProps) {
+  const cssVars = {
+    '--logo-size': `${size}px`,
+    '--print-logo-size': `${printSize}px`,
+  } as React.CSSProperties;
   return (
     <div
       className={cn(
-        "relative flex items-center justify-center shrink-0",
-        glow && "hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)] transition-all duration-300",
+        "relative flex items-center justify-center shrink-0 overflow-hidden rounded-xl bg-black",
+        glow && "shadow-[0_0_20px_rgba(0,255,187,0.4)]",
         className
       )}
-      style={{
-        width: 'var(--logo-size)',
-        height: 'var(--logo-size)',
-        // @ts-expect-error - Custom CSS properties require explicit override or casting in React.CSSProperties
-        '--logo-size': `${size}px`,
-        // @ts-expect-error - Custom CSS properties require explicit override or casting in React.CSSProperties
-        '--print-logo-size': `${printSize || size}px`
-      } as React.CSSProperties}
+      style={cssVars}
     >
       <style>{`
         @media print {
@@ -31,51 +28,63 @@ export function CollabLogo({ className, size = 40, printSize, glow = true }: Col
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
           }
+          .neon-frame {
+            stroke: #00FFBB !important;
+            -webkit-print-color-adjust: exact !important;
+          }
+        }
+        @keyframes neon-pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.7; }
+        }
+        .animate-neon {
+          animation: neon-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
         }
       `}</style>
       <svg
         viewBox="0 0 100 100"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
-        className="w-full h-full collab-logo-container"
+        className="w-full h-full collab-logo-container p-1"
       >
         <defs>
-          <linearGradient id="circle-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#F8FAFC" />
-            <stop offset="100%" stopColor="#CBD5E1" />
-          </linearGradient>
-          <linearGradient id="c-grad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#3B82F6" />
-            <stop offset="100%" stopColor="#1E40AF" />
-          </linearGradient>
-          <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-            <feGaussianBlur in="SourceAlpha" stdDeviation="2" />
-            <feOffset dx="1" dy="1" result="offsetblur" />
-            <feComponentTransfer>
-              <feFuncA type="linear" slope="0.3" />
-            </feComponentTransfer>
-            <feMerge>
-              <feMergeNode />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
+          <filter id="neon-glow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur" />
+            <feComposite in="SourceGraphic" in2="blur" operator="over" />
           </filter>
+          <linearGradient id="neon-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#00FFBB" />
+            <stop offset="100%" stopColor="#00E0FF" />
+          </linearGradient>
         </defs>
-        <circle cx="50" cy="50" r="48" fill="url(#circle-grad)" stroke="#E2E8F0" strokeWidth="1" />
-        <path
-          d="M72 32C67.5 26.5 60 23 51 23C34 23 21 35 21 50C21 65 34 77 51 77C60 77 67.5 73.5 72 68"
-          stroke="url(#c-grad)"
-          strokeWidth="14"
-          strokeLinecap="round"
-          fill="none"
-          filter="url(#shadow)"
+        {/* Outer Neon Frame */}
+        <rect
+          x="4"
+          y="4"
+          width="92"
+          height="92"
+          rx="18"
+          stroke="url(#neon-grad)"
+          strokeWidth="3"
+          className={cn("neon-frame", glow && "animate-neon")}
+          style={{ filter: glow ? 'url(#neon-glow)' : 'none' }}
         />
+        {/* Inner Branding Elements */}
         <path
-          d="M68 36C64 32.5 58 30 51 30C38 30 28 39 28 50C28 61 38 70 51 70C58 70 64 67.5 68 64"
-          stroke="white"
-          strokeWidth="1.5"
+          d="M70 35C66 30 60 27 51 27C36 27 25 38 25 51C25 64 36 75 51 75C60 75 66 72 70 67"
+          stroke="url(#neon-grad)"
+          strokeWidth="10"
           strokeLinecap="round"
-          strokeOpacity="0.6"
           fill="none"
+          className="neon-frame"
+        />
+        {/* Accent Dot */}
+        <circle
+          cx="70"
+          cy="51"
+          r="5"
+          fill="#00FFBB"
+          className={cn(glow && "animate-pulse")}
         />
       </svg>
     </div>
