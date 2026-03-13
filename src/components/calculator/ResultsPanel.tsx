@@ -14,7 +14,6 @@ import { calculatePricing } from '@/lib/pricing-engine';
 import { PLANS } from '@/lib/plans';
 import { useFormContext, useWatch } from 'react-hook-form';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
-import { CollabLogo } from '@/components/ui/collab-logo';
 interface ResultsPanelProps {
   result: PricingResult;
   companyName: string;
@@ -28,7 +27,6 @@ const planDisplayNames: Record<PlanType, string> = {
 };
 export function ResultsPanel({ result, activeId }: ResultsPanelProps) {
   const context = useFormContext<DiagnosticInputs>();
-  // Use specific fields to reduce unnecessary re-renders
   const companyName = useWatch({ name: 'companyName' });
   const leadName = useWatch({ name: 'leadName' });
   const leadRole = useWatch({ name: 'leadRole' });
@@ -40,16 +38,12 @@ export function ResultsPanel({ result, activeId }: ResultsPanelProps) {
   const bankSchedules = useWatch({ name: 'manualBankSchedules' }) || 0;
   const nfse = useWatch({ name: 'manualNFSe' }) || 0;
   const boletos = useWatch({ name: 'monthlyBoletos' }) || 0;
-  const currentInputs = useMemo(() => ({
-    companyName, leadName, leadRole, annualRevenue, segment, commercialRep, 
-    hasERP, erpName, manualBankSchedules: bankSchedules, manualNFSe: nfse, monthlyBoletos: boletos
-  }), [companyName, leadName, leadRole, annualRevenue, segment, commercialRep, hasERP, erpName, bankSchedules, nfse, boletos]);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // Fixed: Added 'context' to dependencies
   const comparison = useMemo(() => {
     if (!companyName && !annualRevenue) return [];
     const plans: PlanType[] = ['essential', 'business', 'premium'];
     return plans.map(p => calculatePricing(context.getValues(), p));
-  }, [companyName, annualRevenue]);
+  }, [companyName, annualRevenue, context]);
   const shareUrl = activeId ? `${window.location.origin}?id=${activeId}` : null;
   const copyProposal = async () => {
     if (!commercialRep) {
@@ -100,14 +94,11 @@ Collab Gestão Empresarial | ${today}`;
         "overflow-hidden border-2 shadow-xl transition-all duration-500 print:shadow-none print:border-slate-200 print:w-full print:bg-white",
         planStyles[result.recommendedPlan]
       )}>
-        {/* Print Header */}
+        {/* Print Header - New Text Branding */}
         <div className="hidden print:flex justify-between items-center border-b-2 border-slate-900 pb-8 mb-10">
-          <div className="flex items-center gap-6">
-            <CollabLogo size={80} printSize={80} glow={false} />
-            <div>
-              <h2 className="text-3xl font-black text-slate-900 uppercase tracking-tighter">Collab Gestão Empresarial</h2>
-              <p className="text-[12px] text-slate-500 uppercase font-bold tracking-[0.4em]">Relatório de Diagnóstico Comercial</p>
-            </div>
+          <div>
+            <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tighter">COLLAB GESTÃO EMPRESARIAL</h2>
+            <p className="text-[12px] text-slate-500 uppercase font-bold tracking-[0.4em]">Relatório de Diagnóstico Comercial</p>
           </div>
           <div className="text-right">
             <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Data de Emissão</div>
@@ -136,7 +127,7 @@ Collab Gestão Empresarial | ${today}`;
         <CardContent className="pt-4 min-h-[300px]">
           <Tabs defaultValue="breakdown" className="w-full print:hidden">
             <TabsList className="grid w-full grid-cols-3 mb-4">
-              <TabsTrigger value="breakdown">Composição</TabsTrigger>
+              <TabsTrigger value="breakdown">Detalhamento</TabsTrigger>
               <TabsTrigger value="compare">Comparar</TabsTrigger>
               <TabsTrigger value="args">Justificativa</TabsTrigger>
             </TabsList>
@@ -248,8 +239,8 @@ Collab Gestão Empresarial | ${today}`;
         </CardFooter>
         <div className="hidden print:flex fixed bottom-0 left-0 right-0 justify-between items-center text-[9px] text-slate-400 border-t border-slate-100 pt-4 bg-white">
           <div className="flex items-center gap-3">
-            <CollabLogo size={14} glow={false} />
-            <span className="font-bold">Collab Gestão Empresarial © {currentYear}</span>
+            <span className="font-black text-slate-900 tracking-tighter uppercase">COLLAB</span>
+            <span className="font-bold">© {currentYear}</span>
           </div>
           <div>Simulação gerada via DealDesk Engine - Tecnologia para Decisão.</div>
           <div className="font-mono">Página 1 de 1</div>

@@ -16,7 +16,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api-client';
-import { CollabLogo } from '@/components/ui/collab-logo';
 const schema = z.object({
   companyName: z.string().min(2, "Nome muito curto"),
   segment: z.string().min(1, "Obrigatório"),
@@ -82,7 +81,7 @@ export function HomePage() {
     defaultValues,
     mode: 'onChange'
   });
-  const { register, control, watch, setValue, reset } = methods;
+  const { reset, watch } = methods;
   const formValues = watch();
   useEffect(() => {
     const shareId = new URLSearchParams(location.search).get('id');
@@ -100,7 +99,8 @@ export function HomePage() {
         })
         .finally(() => setIsInitialLoading(false));
     }
-  }, [location.search, reset, activeSimulationId, navigate, toast]);
+    // Fixed: removed 'toast' from dependencies to satisfy static analysis
+  }, [location.search, reset, activeSimulationId, navigate]);
   const pricingResult = useMemo(() => {
     try {
       return calculatePricing(formValues);
@@ -145,19 +145,22 @@ export function HomePage() {
       <header className="border-b bg-white/95 backdrop-blur-md dark:bg-card/95 sticky top-0 z-50 print:hidden h-20 flex items-center shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <CollabLogo size={48} className="glow-lg" />
             <div className="flex flex-col">
-              <h1 className="text-xl font-black tracking-tighter text-slate-900 dark:text-white leading-none">
-                <span className="inline sm:hidden">Collab</span>
-                <span className="hidden sm:inline">Collab Gestão Empresarial</span>
+              <h1 className="text-xl md:text-2xl font-black tracking-tighter text-slate-900 dark:text-white leading-none uppercase">
+                COLLAB GESTÃO EMPRESARIAL
               </h1>
-              <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-blue-600 dark:text-blue-400 mt-1">
-                Diagnostic & Pricing Engine
+              <span className="text-[10px] font-bold uppercase tracking-[0.2em] md:tracking-[0.3em] text-blue-600 dark:text-blue-400 mt-1.5">
+                Motor de Diagnóstico e Precificação Comercial
               </span>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <HistoryDrawer onLoad={(rec) => { reset(rec.inputs); setActiveSimulationId(rec.id); navigate({ search: `?id=${rec.id}` }, { replace: true }); toast.success(`Diagnóstico de ${rec.inputs.companyName} carregado.`); }} />
+            <HistoryDrawer onLoad={(rec) => { 
+              reset(rec.inputs); 
+              setActiveSimulationId(rec.id); 
+              navigate({ search: `?id=${rec.id}` }, { replace: true }); 
+              toast.success(`Diagnóstico de ${rec.inputs.companyName} carregado.`); 
+            }} />
             <Button variant="ghost" size="sm" onClick={handleReset} className="hidden md:flex">
               <RefreshCcw className="w-4 h-4 mr-2" /> Novo
             </Button>

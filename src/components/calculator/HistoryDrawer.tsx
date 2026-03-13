@@ -29,7 +29,7 @@ export function HistoryDrawer({ onLoad }: HistoryDrawerProps) {
     }
   });
   const togglePublicMutation = useMutation({
-    mutationFn: ({ id, isPublic }: { id: string, isPublic: boolean }) => 
+    mutationFn: ({ id, isPublic }: { id: string, isPublic: boolean }) =>
       api(`/api/simulations/${id}`, { method: 'PATCH', body: JSON.stringify({ isPublic }) }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['simulations'] })
   });
@@ -49,7 +49,7 @@ export function HistoryDrawer({ onLoad }: HistoryDrawerProps) {
       <SheetContent className="w-[400px] sm:w-[500px] overflow-y-auto">
         <SheetHeader className="mb-6">
           <SheetTitle>Simulações Salvas</SheetTitle>
-          <SheetDescription>Acesse e gerencie diagnósticos comerciais anteriores.</SheetDescription>
+          <SheetDescription>Gerencie suas simulações salvas e links de compartilhamento.</SheetDescription>
         </SheetHeader>
         <div className="space-y-4">
           {isLoading ? (
@@ -61,16 +61,16 @@ export function HistoryDrawer({ onLoad }: HistoryDrawerProps) {
               <div key={record.id} className="p-4 border rounded-xl hover:bg-slate-50 transition-colors group relative">
                 <div className="flex justify-between items-start mb-2">
                   <div>
-                    <h4 className="font-bold text-sm truncate max-w-[200px]">{record.inputs.companyName || "Sem nome"}</h4>
+                    <h4 className="font-bold text-sm truncate max-w-[200px]">{record.inputs.companyName || "Empresa não informada"}</h4>
                     <p className="text-[10px] text-muted-foreground">
                       {format(record.timestamp, "dd/MM/yyyy HH:mm", { locale: ptBR })}
                     </p>
                   </div>
                   <div className="flex gap-1">
-                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleCopyLink(record.id)}>
+                    <Button variant="ghost" size="icon" title="Copiar Link" className="h-7 w-7" onClick={() => handleCopyLink(record.id)}>
                       <Share2 className="h-3 w-3" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => deleteMutation.mutate(record.id)}>
+                    <Button variant="ghost" size="icon" title="Excluir" className="h-7 w-7 text-destructive" onClick={() => deleteMutation.mutate(record.id)}>
                       <Trash2 className="h-3 w-3" />
                     </Button>
                   </div>
@@ -86,11 +86,20 @@ export function HistoryDrawer({ onLoad }: HistoryDrawerProps) {
                 </div>
                 <div className="mt-3 pt-3 border-t flex items-center justify-between">
                   <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-                    {record.isPublic ? <Globe className="w-3 h-3" /> : <Lock className="w-3 h-3" />}
-                    Público
+                    {record.isPublic ? (
+                      <>
+                        <Globe className="w-3 h-3 text-blue-600" />
+                        <span className="text-blue-600 font-bold uppercase">Público</span>
+                      </>
+                    ) : (
+                      <>
+                        <Lock className="w-3 h-3" />
+                        <span className="uppercase">Privado</span>
+                      </>
+                    )}
                   </div>
-                  <Switch 
-                    checked={!!record.isPublic} 
+                  <Switch
+                    checked={!!record.isPublic}
                     onCheckedChange={(val) => togglePublicMutation.mutate({ id: record.id, isPublic: val })}
                     className="scale-75"
                   />
