@@ -78,7 +78,8 @@ function updateWranglerJsonc() {
 
 function runSetupCommands() {
     const commands = [
-    "bun add react-number-format"
+    "bun add react-number-format",
+    "bun add @hookform/resolvers zod @tanstack/react-query"
 ];
     
     if (commands.length === 0) {
