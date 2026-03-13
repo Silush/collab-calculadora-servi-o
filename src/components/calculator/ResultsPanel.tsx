@@ -7,7 +7,7 @@ import { CheckCircle2, AlertTriangle, Copy, Zap, Info, Printer, TrendingDown } f
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { calculatePricing } from '@/lib/pricing-engine';
@@ -69,7 +69,10 @@ Proposta preparada por: ${commercialRep || 'Consultor Collab'} | Collab Gestão 
   }, [comparison]);
   return (
     <div className="sticky top-24 space-y-6 print:static print:top-0">
-      <Card className={`overflow-hidden border-2 shadow-xl transition-all duration-500 ${planStyles[result.recommendedPlan]} print:shadow-none print:border-slate-300`}>
+      <Card className={cn(
+        "overflow-hidden border-2 shadow-xl transition-all duration-500 print:shadow-none print:border-slate-300",
+        planStyles[result.recommendedPlan]
+      )}>
         {result.recommendedPlan === 'premium' && (
           <div className="bg-emerald-600 text-white text-[10px] font-bold py-1 text-center uppercase tracking-widest animate-pulse print:hidden">
             Recomendação Ideal
@@ -112,15 +115,15 @@ Proposta preparada por: ${commercialRep || 'Consultor Collab'} | Collab Gestão 
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="text-2xs uppercase">Plano</TableHead>
-                      <TableHead className="text-right text-2xs uppercase">Mensal</TableHead>
-                      <TableHead className="text-right text-2xs uppercase">Setup</TableHead>
+                      <TableHead className="text-[10px] uppercase">Plano</TableHead>
+                      <TableHead className="text-right text-[10px] uppercase">Mensal</TableHead>
+                      <TableHead className="text-right text-[10px] uppercase">Setup</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {comparison.map((c) => (
                       <TableRow 
-                        key={c.recommendedPlan} 
+                        key={c.recommendedPlan}
                         className={cn(
                           c.recommendedPlan === result.recommendedPlan && "bg-slate-200/50 dark:bg-slate-800/50",
                           c.recommendedPlan === 'premium' && "text-emerald-700 dark:text-emerald-400 font-bold"

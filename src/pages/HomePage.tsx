@@ -18,12 +18,12 @@ import { CollabLogo } from '@/components/ui/collab-logo';
 const schema = z.object({
   companyName: z.string().min(1, "Obrigatório"),
   segment: z.string().min(1, "Obrigatório"),
-  leadName: z.string().default(""),
-  leadRole: z.string().default(""),
+  leadName: z.string(),
+  leadRole: z.string(),
   monthlyRevenue: z.number().min(0),
   annualRevenue: z.number().min(0),
   hasERP: z.enum(["yes", "no"]),
-  erpName: z.string().default(""),
+  erpName: z.string(),
   needsCollabERP: z.enum(["yes", "no"]),
   internalFinanceTeam: z.enum(["yes", "no"]),
   internalOpsTeam: z.enum(["yes", "no"]),
@@ -40,7 +40,7 @@ const schema = z.object({
   needsControllership: z.boolean(),
   meetingHours: z.number().min(0),
   commercialRep: z.string().min(1, "Obrigatório"),
-  notes: z.string().default(""),
+  notes: z.string(),
 });
 const defaultValues: DiagnosticInputs = {
   companyName: '',
@@ -78,6 +78,7 @@ export function HomePage() {
   const formValues = watch();
   const pricingResult = useMemo(() => {
     try {
+      // Pricing engine expects full DiagnosticInputs
       return calculatePricing(formValues);
     } catch (e) {
       console.error("Pricing calculation error:", e);
@@ -135,10 +136,10 @@ export function HomePage() {
             <Button variant="ghost" size="sm" onClick={() => reset(defaultValues)}>
               <RefreshCcw className="w-4 h-4 mr-2" /> Novo
             </Button>
-            <Button
-              variant="default"
-              size="sm"
-              className="hidden sm:flex"
+            <Button 
+              variant="default" 
+              size="sm" 
+              className="hidden sm:flex" 
               onClick={handleSave}
               disabled={saveMutation.isPending}
             >
