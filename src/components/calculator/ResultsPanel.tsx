@@ -21,9 +21,10 @@ interface ResultsPanelProps {
   activeId?: string | null;
 }
 export function ResultsPanel({ result, companyName, commercialRep, activeId }: ResultsPanelProps) {
-  const { watch } = useFormContext<DiagnosticInputs>() || { watch: () => ({}) };
-  const currentInputs = watch() as DiagnosticInputs;
+  const context = useFormContext<DiagnosticInputs>();
+  const currentInputs = context ? context.watch() : ({} as DiagnosticInputs);
   const comparison = useMemo(() => {
+    if (!currentInputs.companyName && !currentInputs.monthlyRevenue) return [];
     const plans: PlanType[] = ['essential', 'business', 'premium'];
     return plans.map(p => calculatePricing(currentInputs, p));
   }, [currentInputs]);
@@ -34,43 +35,36 @@ export function ResultsPanel({ result, companyName, commercialRep, activeId }: R
     }
     const today = format(new Date(), "dd/MM/yyyy", { locale: ptBR });
     const text = `PROPOSTA COMERCIAL - COLLAB DEALDESK
-DADOS DO LEAD:
-Empresa: ${currentInputs.companyName}
-Contato: ${currentInputs.leadName || 'Não informado'} (${currentInputs.leadRole || 'Não informado'})
+1. DADOS DO LEAD
+Empresa: ${currentInputs.companyName || 'N/A'}
+Contato: ${currentInputs.leadName || 'N/A'} (${currentInputs.leadRole || 'N/A'})
 Faturamento: Mensal ${formatCurrency(currentInputs.monthlyRevenue)} | Anual ${formatCurrency(currentInputs.annualRevenue)}
-ERP: ${currentInputs.hasERP === 'yes' ? currentInputs.erpName : 'Nenhum'} | Collab ERP: ${formatBooleanBR(currentInputs.needsCollabERP)}
-Equipes: Financeira Interna: ${formatBooleanBR(currentInputs.internalFinanceTeam)} | Operacional: ${formatBooleanBR(currentInputs.internalOpsTeam)}
-Precisa: Operacional: ${formatBooleanBR(currentInputs.needsOps)} | Estratégico: ${formatBooleanBR(currentInputs.needsStrategic)}
-DIAGNÓSTICO OPERACIONAL:
-Agend. Bancários: ${currentInputs.manualBankSchedules}/mês | NFSe: ${currentInputs.manualNFSe}/mês | Boletos: ${currentInputs.monthlyBoletos}/mês
-CONSULTIVO:
-Reuniões Analíticas: ${formatBooleanBR(currentInputs.needsAnalyticalMeetings)} | Reuniões Estratégicas: ${formatBooleanBR(currentInputs.needsStrategicMeetings)}
-Funcionalidades: Dashboard [${formatBooleanBR(currentInputs.needsDashboards)}], DRE [${formatBooleanBR(currentInputs.needsDRE)}], Orç. [${formatBooleanBR(currentInputs.needsBudgeting)}], Controladoria [${formatBooleanBR(currentInputs.needsControllership)}]
-Horas Extras Consultoria: ${currentInputs.meetingHours}h
-RECOMENDAÇÃO: ${result.recommendedPlan.toUpperCase()}
-JUSTIFICATIVA:
+ERP: ${currentInputs.hasERP === 'yes' ? currentInputs.erpName : 'Não possui'}
+2. DIAGNÓSTICO OPERACIONAL
+Agendamentos Bancários: ${currentInputs.manualBankSchedules}/mês
+Emissões NFSe: ${currentInputs.manualNFSe}/mês
+Boletos: ${currentInputs.monthlyBoletos}/mês
+3. JUSTIFICATIVA TÉCNICA (RECOMENDAÇÃO: ${result.recommendedPlan.toUpperCase()})
 ${result.arguments.map(a => `• ${a}`).join('\n')}
-INVESTIMENTO:
+4. COMPOSIÇÃO DO INVESTIMENTO
 ${result.breakdown.map(item => `- ${item.label}: ${formatCurrency(item.value)}`).join('\n')}
-Total Mensal: ${formatCurrency(result.totalMonthly)}
-Investimento Inicial (Implantação): ${formatCurrency(result.totalInitial)}
-${result.savingsVsIndividual ? `Economia Estimada: ${formatCurrency(result.savingsVsIndividual)}` : ''}
-Observações: ${currentInputs.notes || 'N/A'}
-Assinado,
-${currentInputs.commercialRep}
-Collab Gestão Empresarial
-Data: ${today}
-Acesse a simulação detalhada: ${shareUrl || 'Simulação não salva'}`;
+INVESTIMENTO MENSAL TOTAL: ${formatCurrency(result.totalMonthly)}
+INVESTIMENTO INICIAL (IMPLANTAÇÃO): ${formatCurrency(result.totalInitial)}
+${result.savingsVsIndividual ? `EFICIÊNCIA POR UNIFICAÇÃO (ECONOMIA): ${formatCurrency(result.savingsVsIndividual)}` : ''}
+Observações: ${currentInputs.notes || 'Nenhum comentário adicional.'}
+---
+Emitido por: ${currentInputs.commercialRep}
+Collab Gestão Empresarial | ${today}
+Link da Simulação: ${shareUrl || 'Disponível apenas após salvar'}`;
     try {
       await navigator.clipboard.writeText(text);
-      toast.success("Proposta completa copiada para o clipboard!");
+      toast.success("Proposta estruturada copiada para o clipboard!");
     } catch (err) {
       toast.error("Erro ao copiar proposta.");
     }
   };
   const handleShare = async () => {
     if (!activeId) return toast.error("Salve a simulação primeiro para gerar um link.");
-    if (!currentInputs.commercialRep) return toast.warning("Preencha o seu nome como Responsável Comercial antes de compartilhar.");
     await navigator.clipboard.writeText(shareUrl!);
     toast.success("Link de compartilhamento copiado!");
   };
@@ -88,36 +82,35 @@ Acesse a simulação detalhada: ${shareUrl || 'Simulação não salva'}`;
         <div className="hidden print:flex justify-between items-center border-b pb-4 mb-6">
           <div className="flex items-center gap-3">
             <CollabLogo size={40} />
-            <h2 className="text-xl font-black text-slate-900">DEALDESK REPORT</h2>
+            <h2 className="text-xl font-black text-slate-900 uppercase">Relatório de Diagnóstico</h2>
           </div>
           <div className="text-right text-[10px] text-muted-foreground">
-            Data: {format(new Date(), "dd/MM/yyyy", { locale: ptBR })}
+            {format(new Date(), "dd/MM/yyyy HH:mm", { locale: ptBR })}
           </div>
         </div>
         {result.recommendedPlan === 'premium' && (
           <div className="bg-emerald-600 text-white text-[10px] font-bold py-1 text-center uppercase tracking-widest print:hidden">
-            Recomendação de Alta Eficiência
+            Recomendação de Máximo Valor
           </div>
         )}
         <CardHeader className="pb-2">
           <div className="flex justify-between items-start print:hidden">
             <Badge className="px-3 py-1 text-sm font-bold uppercase tracking-wider bg-primary">
-              {result.recommendedPlan}
+              Plano {result.recommendedPlan}
             </Badge>
           </div>
           <CardTitle className="text-4xl font-black pt-6 flex items-baseline gap-1 print:pt-0">
             {formatCurrency(result.totalMonthly)}
             <span className="text-sm font-medium text-muted-foreground">/mês</span>
           </CardTitle>
-          <p className="text-xs text-muted-foreground font-medium">Investimento inicial: {formatCurrency(result.totalInitial)}</p>
+          <p className="text-xs text-muted-foreground font-medium">Investimento inicial (Setup): {formatCurrency(result.totalInitial)}</p>
         </CardHeader>
         <CardContent className="pt-4 min-h-[300px]">
-          {/* Main Content Sections for Web */}
           <Tabs defaultValue="breakdown" className="w-full print:hidden">
             <TabsList className="grid w-full grid-cols-3 mb-4">
-              <TabsTrigger value="breakdown">Composição</TabsTrigger>
+              <TabsTrigger value="breakdown">Custos</TabsTrigger>
               <TabsTrigger value="compare">Planos</TabsTrigger>
-              <TabsTrigger value="args">Justificativa</TabsTrigger>
+              <TabsTrigger value="args">Argumentos</TabsTrigger>
             </TabsList>
             <TabsContent value="breakdown" className="space-y-3">
               {result.breakdown.map((item, i) => (
@@ -148,21 +141,20 @@ Acesse a simulação detalhada: ${shareUrl || 'Simulação não salva'}`;
                 ))}
             </TabsContent>
           </Tabs>
-          {/* Print-only detailed breakdown */}
           <div className="hidden print:block space-y-8">
             <section className="space-y-2">
               <h3 className="text-sm font-black uppercase text-slate-900 border-b pb-1">1. Diagnóstico do Lead</h3>
               <div className="grid grid-cols-2 gap-x-12 gap-y-2 text-xs">
-                <div><span className="font-bold">Empresa:</span> {currentInputs.companyName}</div>
-                <div><span className="font-bold">Segmento:</span> {currentInputs.segment}</div>
-                <div><span className="font-bold">Lead:</span> {currentInputs.leadName} ({currentInputs.leadRole})</div>
+                <div><span className="font-bold">Empresa:</span> {currentInputs.companyName || 'N/A'}</div>
+                <div><span className="font-bold">Segmento:</span> {currentInputs.segment || 'N/A'}</div>
+                <div><span className="font-bold">Lead:</span> {currentInputs.leadName || 'N/A'} ({currentInputs.leadRole || 'N/A'})</div>
                 <div><span className="font-bold">ERP Atual:</span> {currentInputs.hasERP === 'yes' ? currentInputs.erpName : 'Nenhum'}</div>
-                <div><span className="font-bold">Agend. Bancários:</span> {currentInputs.manualBankSchedules}/mês</div>
+                <div><span className="font-bold">Agendamentos:</span> {currentInputs.manualBankSchedules}/mês</div>
                 <div><span className="font-bold">NFSe Emitidas:</span> {currentInputs.manualNFSe}/mês</div>
               </div>
             </section>
             <section className="space-y-2">
-              <h3 className="text-sm font-black uppercase text-slate-900 border-b pb-1">2. Justificativa da Recomendação</h3>
+              <h3 className="text-sm font-black uppercase text-slate-900 border-b pb-1">2. Justificativa Estratégica</h3>
               <div className="space-y-2">
                 {result.arguments.map((arg, i) => (
                   <div key={i} className="flex gap-2 text-xs">
@@ -171,8 +163,8 @@ Acesse a simulação detalhada: ${shareUrl || 'Simulação não salva'}`;
                 ))}
               </div>
             </section>
-            <section className="space-y-2 break-before-page">
-              <h3 className="text-sm font-black uppercase text-slate-900 border-b pb-1">3. Composição do Investimento</h3>
+            <section className="space-y-2">
+              <h3 className="text-sm font-black uppercase text-slate-900 border-b pb-1">3. Detalhamento do Investimento</h3>
               <div className="space-y-2">
                 {result.breakdown.map((item, i) => (
                   <div key={i} className="flex justify-between text-xs py-1 border-b border-slate-100">
@@ -180,24 +172,16 @@ Acesse a simulação detalhada: ${shareUrl || 'Simulação não salva'}`;
                     <span className="font-bold">{formatCurrency(item.value)}</span>
                   </div>
                 ))}
-                <div className="flex justify-between pt-2 text-sm font-black">
+                <div className="flex justify-between pt-2 text-sm font-black text-primary">
                   <span>INVESTIMENTO MENSAL TOTAL</span>
                   <span>{formatCurrency(result.totalMonthly)}</span>
                 </div>
               </div>
             </section>
-            {currentInputs.notes && (
-              <section className="space-y-2">
-                <h3 className="text-sm font-black uppercase text-slate-900 border-b pb-1">Observações</h3>
-                <p className="text-[10px] text-muted-foreground whitespace-pre-wrap italic">
-                  {currentInputs.notes}
-                </p>
-              </section>
-            )}
-            <div className="flex justify-end pt-20">
+            <div className="flex justify-end pt-24">
               <div className="w-64 text-center">
                 <div className="border-t border-slate-900 pt-2 font-bold text-xs">
-                  {currentInputs.commercialRep || 'Consultor Collab'}
+                  {currentInputs.commercialRep || 'Consultor Responsável'}
                 </div>
                 <div className="text-[10px] text-muted-foreground uppercase tracking-wider">
                   Collab Gestão Empresarial
@@ -220,14 +204,14 @@ Acesse a simulação detalhada: ${shareUrl || 'Simulação não salva'}`;
         </CardContent>
         <CardFooter className="flex flex-col gap-2 pt-0 pb-6 print:hidden">
           <Button className="w-full h-12 text-lg font-bold" onClick={copyProposal}>
-            <Copy className="mr-2 w-5 h-5" /> Copiar Proposta
+            <Copy className="mr-2 w-5 h-5" /> Gerar Proposta
           </Button>
           <div className="grid grid-cols-2 gap-2 w-full">
-            <Button variant="outline" size="sm" onClick={handleShare}>
-              <Share2 className="mr-2 w-4 h-4" /> Link Simulação
+            <Button variant="outline" size="sm" onClick={handleShare} disabled={!activeId}>
+              <Share2 className="mr-2 w-4 h-4" /> Link Direto
             </Button>
             <Button variant="outline" size="sm" onClick={() => window.print()}>
-              <Printer className="mr-2 w-4 h-4" /> Exportar PDF
+              <Printer className="mr-2 w-4 h-4" /> Imprimir
             </Button>
           </div>
         </CardFooter>

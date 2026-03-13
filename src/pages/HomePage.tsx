@@ -1,5 +1,5 @@
 import React, { useMemo, useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useSearchParams } from 'react-router-dom';
@@ -76,10 +76,11 @@ export function HomePage() {
   const queryClient = useQueryClient();
   const [isInitialLoading, setIsInitialLoading] = useState(false);
   const [activeSimulationId, setActiveSimulationId] = useState<string | null>(null);
-  const { register, control, watch, setValue, reset } = useForm<DiagnosticInputs>({
+  const methods = useForm<DiagnosticInputs>({
     resolver: zodResolver(schema),
     defaultValues,
   });
+  const { register, control, watch, setValue, reset } = methods;
   const formValues = watch();
   useEffect(() => {
     const shareId = searchParams.get('id');
@@ -153,30 +154,32 @@ export function HomePage() {
         </div>
       </header>
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
-          <div className="lg:col-span-7 print:hidden">
-            {isInitialLoading ? (
-              <div className="space-y-8">
-                <Skeleton className="h-[200px] w-full" />
-                <Skeleton className="h-[300px] w-full" />
-              </div>
-            ) : (
-              <DiagnosticForm register={register} control={control} setValue={setValue} />
-            )}
+        <FormProvider {...methods}>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+            <div className="lg:col-span-7 print:hidden">
+              {isInitialLoading ? (
+                <div className="space-y-8">
+                  <Skeleton className="h-[200px] w-full" />
+                  <Skeleton className="h-[300px] w-full" />
+                </div>
+              ) : (
+                <DiagnosticForm register={register} control={control} setValue={setValue} />
+              )}
+            </div>
+            <div className="lg:col-span-5 relative print:col-span-12">
+              {isInitialLoading ? (
+                <Skeleton className="h-[500px] w-full" />
+              ) : (
+                <ResultsPanel
+                  result={pricingResult}
+                  companyName={formValues.companyName}
+                  commercialRep={formValues.commercialRep}
+                  activeId={activeSimulationId}
+                />
+              )}
+            </div>
           </div>
-          <div className="lg:col-span-5 relative print:col-span-12">
-            {isInitialLoading ? (
-              <Skeleton className="h-[500px] w-full" />
-            ) : (
-              <ResultsPanel
-                result={pricingResult}
-                companyName={formValues.companyName}
-                commercialRep={formValues.commercialRep}
-                activeId={activeSimulationId}
-              />
-            )}
-          </div>
-        </div>
+        </FormProvider>
       </main>
     </div>
   );

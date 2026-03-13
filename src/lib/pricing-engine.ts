@@ -2,6 +2,8 @@ import { DiagnosticInputs, PricingResult, PlanType } from "@shared/types";
 import { PLANS } from "./plans";
 import { formatCurrency } from "./utils";
 export function calculatePricing(inputs: DiagnosticInputs, forcePlan?: PlanType): PricingResult {
+  // Safety fallback for partial/empty data
+  if (!inputs) return calculatePricing({} as DiagnosticInputs, forcePlan);
   const monthlyRevenue = Number(inputs.monthlyRevenue) || 0;
   const annualRevenue = Number(inputs.annualRevenue) || 0;
   const needsOps = Boolean(inputs.needsOps);
@@ -34,8 +36,10 @@ export function calculatePricing(inputs: DiagnosticInputs, forcePlan?: PlanType)
   const baseFee = plan.baseFee;
   const setupFee = plan.setupFee;
   breakdown.push({ label: "Plano Base", value: baseFee, type: 'base' });
-  if (setupFee > 0) breakdown.push({ label: "Taxa de Implantação", value: setupFee, type: 'setup' });
-  // 3. Operational Overages
+  if (setupFee > 0) {
+    breakdown.push({ label: "Taxa de Implantação (Setup)", value: setupFee, type: 'setup' });
+  }
+  // 3. Operational Overages (Addons)
   let overageFees = 0;
   if (recommendedPlan === 'essential' || recommendedPlan === 'premium') {
     const p = plan as typeof PLANS.essential | typeof PLANS.premium;
@@ -43,70 +47,63 @@ export function calculatePricing(inputs: DiagnosticInputs, forcePlan?: PlanType)
     const nfseOver = Math.max(0, manualNFSe - p.limits.nfse);
     const boletoOver = Math.max(0, monthlyBoletos - p.limits.boletos);
     overageFees = (bankOver + nfseOver + boletoOver) * p.addonUnit;
-    if (overageFees > 0) breakdown.push({ label: "Excedentes Operacionais", value: overageFees, type: 'addon' });
+    if (overageFees > 0) {
+      breakdown.push({ label: "Excedentes Operacionais", value: overageFees, type: 'addon' });
+    }
   }
-  // 4. Revenue Tiers
+  // 4. Revenue Tiers (Annual Revenue Threshold > 4.8M)
   let revenueSurcharge = 0;
   if (recommendedPlan === 'business' || recommendedPlan === 'premium') {
     const p = plan as typeof PLANS.business | typeof PLANS.premium;
+    // Tiers calculated for every 1M above 4.8M
     const excessRevenue = Math.max(0, annualRevenue - 4800000);
     const tiers = Math.ceil(excessRevenue / 1000000);
     revenueSurcharge = tiers * p.revenueTierUnit;
-    if (revenueSurcharge > 0) breakdown.push({ label: "Adicional por Faturamento", value: revenueSurcharge, type: 'addon' });
+    if (revenueSurcharge > 0) {
+      breakdown.push({ label: `Adicional Faturamento (+${tiers}M)`, value: revenueSurcharge, type: 'addon' });
+    }
   }
-  // 5. Meeting Hours
-  const totalMeetings = meetingHours + (needsStrategicMeetings ? 2 : 0) + (needsAnalyticalMeetings ? 2 : 0);
-  const meetingFees = totalMeetings * plan.meetingUnit;
-  if (meetingFees > 0) breakdown.push({ label: "Horas de Consultoria", value: meetingFees, type: 'addon' });
-  // 6. Savings
+  // 5. Consulting Hours
+  // Strategic/Analytical meetings add 2 hours each to the base consultative workload
+  const totalConsultingHours = meetingHours + (needsStrategicMeetings ? 2 : 0) + (needsAnalyticalMeetings ? 2 : 0);
+  const meetingFees = totalConsultingHours * plan.meetingUnit;
+  if (meetingFees > 0) {
+    breakdown.push({ label: `Serviços Consultivos (${totalConsultingHours}h)`, value: meetingFees, type: 'addon' });
+  }
+  // 6. Savings Check (Premium Plan Efficiency)
   let savingsVsIndividual: number | undefined;
   if (recommendedPlan === 'premium') {
     const separateCost = PLANS.essential.baseFee + PLANS.business.baseFee;
     savingsVsIndividual = separateCost - PLANS.premium.baseFee;
   }
-  // 7. Advanced Arguments & Alerts
+  // 7. Contextual Arguments
   const arguments_list: string[] = [];
   const alerts: string[] = [];
-  // -- Contextual Arguments --
   if (segment.includes("SaaS") || segment.includes("Tecnologia")) {
-    arguments_list.push("Foco em métricas de crescimento: CAC, LTV e Churn integrados ao DRE.");
+    arguments_list.push("Foco em métricas SaaS: Acompanhamento de CAC, LTV e Churn no DRE.");
   } else if (segment.includes("Saúde") || segment.includes("Clínica")) {
-    arguments_list.push("Compliance rigoroso: Gestão de DMED e fluxo de caixa por convênios.");
+    arguments_list.push("Compliance Setorial: Gestão de DMED e fluxos específicos de convênio.");
   } else {
-    arguments_list.push("Profissionalização imediata da gestão financeira com processos validados.");
+    arguments_list.push("Profissionalização imediata: Processos financeiros validados para escala.");
   }
-  if (leadRole.includes("cfo") || leadRole.includes("diretor") || leadRole.includes("gerente")) {
-    arguments_list.push("Inteligência Gerencial: Reportes prontos para suporte à tomada de decisão executiva.");
+  if (leadRole.includes("cfo") || leadRole.includes("diretor")) {
+    arguments_list.push("Suporte à Decisão: Reportes estratégicos prontos para análise executiva.");
   }
   if (recommendedPlan === 'premium') {
-    arguments_list.push("Unificação Operacional e Estratégica: Visão ponta a ponta do negócio.");
+    arguments_list.push("Visão 360: Unificação das camadas operacional e estratégica.");
     if (savingsVsIndividual && savingsVsIndividual > 0) {
-      arguments_list.push(`Eficiência Financeira: Economia de ${formatCurrency(savingsVsIndividual)} na unificação.`);
+      arguments_list.push(`Eficiência Financeira: Unificação gera economia direta de ${formatCurrency(savingsVsIndividual)}.`);
     }
   }
-  if (inputs.needsCollabERP === 'yes') {
-    arguments_list.push("Ecosistema Integrado: Implantação e suporte ao ERP Collab para total automação.");
+  // 8. Alerts
+  if (erpName.includes("sap") || erpName.includes("totvs") || erpName.includes("senior")) {
+    alerts.push(`ERP Robustez (${erpName.toUpperCase()}): Requer validação técnica de API para integrações.`);
   }
-  if (inputs.internalFinanceTeam === 'yes') {
-    arguments_list.push("Apoio à Equipe Interna: Atuamos como camada de auditoria e BI especializado.");
-  } else if (inputs.internalOpsTeam === 'yes') {
-    arguments_list.push("Foco Estratégico: Liberamos seu time operacional para focar no core business.");
+  if (manualNFSe > 50 && recommendedPlan === 'essential') {
+    alerts.push("Volume Crítico: O volume de notas atual pode onerar o plano Essential em excesso.");
   }
-  // -- Advanced Alerts --
-  if (erpName.includes("totvs") || erpName.includes("sap")) {
-    alerts.push(`ERP ${erpName.toUpperCase()} detectado: Requer validação de API para integração automática.`);
-  }
-  if (inputs.internalFinanceTeam === 'yes' && inputs.internalOpsTeam === 'yes' && recommendedPlan === 'essential') {
-    alerts.push("Duplo Time Interno: Avalie se o plano Business (CFO) não agrega mais valor estratégico.");
-  }
-  if (manualNFSe > 50 && recommendedPlan !== 'premium') {
-    alerts.push("Volume de Notas alto: O plano Premium oferece custo por excedente reduzido.");
-  }
-  if (monthlyRevenue > 200000 && recommendedPlan === 'essential') {
-    alerts.push("Alerta de Escala: O faturamento atual sugere necessidade de controles do plano Business/Premium.");
-  }
-  if (annualRevenue > 10000000) {
-    alerts.push("Faturamento > 10M: Recomendamos auditoria trimestral de controladoria.");
+  if (annualRevenue > 12000000) {
+    alerts.push("Escala Industrial: Recomendamos acompanhamento de controladoria quinzenal.");
   }
   const totalMonthly = baseFee + overageFees + revenueSurcharge + meetingFees;
   return {
