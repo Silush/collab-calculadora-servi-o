@@ -15,7 +15,7 @@ interface SectionProps {
   control: Control<DiagnosticInputs>;
   setValue: UseFormSetValue<DiagnosticInputs>;
 }
-export function GeneralInfoSection({ register, control, setValue }: Pick<SectionProps, 'register' | 'control' | 'setValue'>) {
+export function GeneralInfoSection({ register, control, setValue }: SectionProps) {
   const hasERP = useWatch({ control, name: 'hasERP' });
   return (
     <Card className="shadow-sm border-slate-200">
@@ -50,8 +50,8 @@ export function GeneralInfoSection({ register, control, setValue }: Pick<Section
         </div>
         <div className="space-y-3">
           <Label>Já possui ERP?</Label>
-          <RadioGroup 
-            value={hasERP} 
+          <RadioGroup
+            value={hasERP}
             onValueChange={(val) => setValue('hasERP', val as "yes" | "no")}
             className="flex items-center space-x-4 pt-1"
           >
@@ -67,9 +67,9 @@ export function GeneralInfoSection({ register, control, setValue }: Pick<Section
         </div>
         <AnimatePresence>
           {hasERP === 'yes' && (
-            <motion.div 
-              initial={{ opacity: 0, height: 0 }} 
-              animate={{ opacity: 1, height: 'auto' }} 
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
               className="space-y-2 overflow-hidden"
             >
@@ -83,9 +83,9 @@ export function GeneralInfoSection({ register, control, setValue }: Pick<Section
   );
 }
 export function OperationalSection({ control, setValue }: Pick<SectionProps, 'control' | 'setValue'>) {
-  const bank = useWatch({ control, name: 'manualBankSchedules' }) || 0;
-  const nfse = useWatch({ control, name: 'manualNFSe' }) || 0;
-  const boletos = useWatch({ control, name: 'monthlyBoletos' }) || 0;
+  const bank = useWatch({ control, name: 'manualBankSchedules' }) ?? 0;
+  const nfse = useWatch({ control, name: 'manualNFSe' }) ?? 0;
+  const boletos = useWatch({ control, name: 'monthlyBoletos' }) ?? 0;
   const needsOps = useWatch({ control, name: 'needsOps' });
   return (
     <Card className="shadow-sm border-slate-200">

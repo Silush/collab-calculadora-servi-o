@@ -15,6 +15,7 @@ export function DiagnosticForm({ register, control, setValue }: DiagnosticFormPr
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <GeneralInfoSection
         register={register}
+        control={control}
         setValue={setValue}
       />
       <OperationalSection
