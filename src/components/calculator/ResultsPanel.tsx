@@ -3,7 +3,7 @@ import { PricingResult, DiagnosticInputs, PlanType } from '@shared/types';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CheckCircle2, AlertTriangle, Copy, Zap, Printer, Share2, TrendingDown } from 'lucide-react';
+import { CheckCircle2, AlertTriangle, Copy, Printer, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
@@ -12,7 +12,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { calculatePricing } from '@/lib/pricing-engine';
 import { useFormContext } from 'react-hook-form';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 interface ResultsPanelProps {
   result: PricingResult;
   companyName: string;
@@ -29,19 +29,24 @@ export function ResultsPanel({ result, companyName, commercialRep, activeId }: R
   const shareUrl = activeId ? `${window.location.origin}?id=${activeId}` : null;
   const copyProposal = async () => {
     const today = format(new Date(), "dd/MM/yyyy", { locale: ptBR });
+    const leadInfo = currentInputs.leadName 
+      ? `A/C: ${currentInputs.leadName}${currentInputs.leadRole ? ` (${currentInputs.leadRole})` : ''}` 
+      : '';
     const text = `PROPOSTA COMERCIAL - COLLAB DEALDESK
-Cliente: ${companyName || 'Lead Diagnosticado'}
-Plano: ${result.recommendedPlan.toUpperCase()}
+Empresa: ${companyName || 'Lead Diagnosticado'}
+${leadInfo}
+Plano Recomendado: ${result.recommendedPlan.toUpperCase()}
 Investimento Mensal: ${formatCurrency(result.totalMonthly)}
-${shareUrl ? `Link da Simulação: ${shareUrl}` : ''}
-JUSTIFICATIVA:
-${result.arguments.map(a => `- ${a}`).join('\n')}
+Investimento Inicial (Implantação): ${formatCurrency(result.totalInitial)}
+${shareUrl ? `Acesse a simulação detalhada: ${shareUrl}` : ''}
+JUSTIFICATIVA E GANHOS:
+${result.arguments.map(a => `• ${a}`).join('\n')}
 Preparado por: ${commercialRep || 'Consultor Collab'} | Data: ${today}`;
     try {
       await navigator.clipboard.writeText(text);
-      toast.success("Proposta copiada!");
+      toast.success("Proposta copiada para o clipboard!");
     } catch (err) {
-      toast.error("Erro ao copiar.");
+      toast.error("Erro ao copiar proposta.");
     }
   };
   const handleShare = async () => {
@@ -62,7 +67,7 @@ Preparado por: ${commercialRep || 'Consultor Collab'} | Data: ${today}`;
       )}>
         {result.recommendedPlan === 'premium' && (
           <div className="bg-emerald-600 text-white text-[10px] font-bold py-1 text-center uppercase tracking-widest print:hidden">
-            Recomendação Ideal
+            Recomendação de Alta Eficiência
           </div>
         )}
         <CardHeader className="pb-2">
@@ -77,14 +82,14 @@ Preparado por: ${commercialRep || 'Consultor Collab'} | Data: ${today}`;
           </CardTitle>
           <p className="text-xs text-muted-foreground font-medium">Investimento inicial: {formatCurrency(result.totalInitial)}</p>
         </CardHeader>
-        <CardContent className="pt-4">
+        <CardContent className="pt-4 min-h-[300px]">
           <Tabs defaultValue="breakdown" className="w-full print:hidden">
             <TabsList className="grid w-full grid-cols-3 mb-4">
-              <TabsTrigger value="breakdown">Itens</TabsTrigger>
+              <TabsTrigger value="breakdown">Composição</TabsTrigger>
               <TabsTrigger value="compare">Planos</TabsTrigger>
-              <TabsTrigger value="args">Ganhos</TabsTrigger>
+              <TabsTrigger value="args">Justificativa</TabsTrigger>
             </TabsList>
-            <TabsContent value="breakdown" className="space-y-3">
+            <TabsContent value="breakdown" className="space-y-3 animate-in fade-in zoom-in-95 duration-200">
               {result.breakdown.map((item, i) => (
                 <div key={i} className="flex justify-between items-center text-sm border-b border-dashed border-slate-200 pb-1">
                   <span className="text-muted-foreground">{item.label}</span>
@@ -92,7 +97,7 @@ Preparado por: ${commercialRep || 'Consultor Collab'} | Data: ${today}`;
                 </div>
               ))}
             </TabsContent>
-            <TabsContent value="compare">
+            <TabsContent value="compare" className="animate-in fade-in zoom-in-95 duration-200">
                <Table>
                   <TableBody>
                     {comparison.map((c) => (
@@ -104,7 +109,7 @@ Preparado por: ${commercialRep || 'Consultor Collab'} | Data: ${today}`;
                   </TableBody>
                </Table>
             </TabsContent>
-            <TabsContent value="args" className="space-y-3">
+            <TabsContent value="args" className="space-y-3 animate-in fade-in zoom-in-95 duration-200">
                {result.arguments.map((arg, i) => (
                   <div key={i} className="flex gap-2 text-xs text-foreground/90">
                     <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
@@ -113,7 +118,6 @@ Preparado por: ${commercialRep || 'Consultor Collab'} | Data: ${today}`;
                 ))}
             </TabsContent>
           </Tabs>
-          {/* Visible in Print only section */}
           <div className="hidden print:block space-y-6 mt-4">
             <div className="border-t pt-4">
               <h3 className="text-sm font-bold mb-2 uppercase">Composição do Investimento</h3>
@@ -154,10 +158,10 @@ Preparado por: ${commercialRep || 'Consultor Collab'} | Data: ${today}`;
           </Button>
           <div className="grid grid-cols-2 gap-2 w-full">
             <Button variant="outline" size="sm" onClick={handleShare}>
-              <Share2 className="mr-2 w-4 h-4" /> Link
+              <Share2 className="mr-2 w-4 h-4" /> Link Simulação
             </Button>
             <Button variant="outline" size="sm" onClick={() => window.print()}>
-              <Printer className="mr-2 w-4 h-4" /> PDF
+              <Printer className="mr-2 w-4 h-4" /> Gerar PDF
             </Button>
           </div>
         </CardFooter>

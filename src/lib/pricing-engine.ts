@@ -14,6 +14,7 @@ export function calculatePricing(inputs: DiagnosticInputs, forcePlan?: PlanType)
   const needsAnalyticalMeetings = Boolean(inputs.needsAnalyticalMeetings);
   const segment = inputs.segment || "";
   const erpName = (inputs.erpName || "").toLowerCase();
+  const leadRole = (inputs.leadRole || "").toLowerCase();
   // 1. Recommendation Logic
   let recommendedPlan: PlanType = forcePlan || 'essential';
   if (!forcePlan) {
@@ -74,21 +75,29 @@ export function calculatePricing(inputs: DiagnosticInputs, forcePlan?: PlanType)
   } else {
     arguments_list.push("Profissionalização imediata da gestão financeira com processos validados.");
   }
+  if (leadRole.includes("cfo") || leadRole.includes("diretor") || leadRole.includes("gerente")) {
+    arguments_list.push("Inteligência Gerencial: Reportes prontos para suporte à tomada de decisão executiva.");
+  }
   if (recommendedPlan === 'premium') {
     arguments_list.push("Unificação Operacional e Estratégica: Visão ponta a ponta do negócio.");
     if (savingsVsIndividual && savingsVsIndividual > 0) {
       arguments_list.push(`Eficiência Financeira: Economia de ${formatCurrency(savingsVsIndividual)} na unificação.`);
     }
   }
-  if (inputs.internalFinanceTeam === 'yes') {
-    arguments_list.push("Apoio à Equipe Interna: Atuação como camada de auditoria e inteligência.");
+  if (inputs.needsCollabERP === 'yes') {
+    arguments_list.push("Ecosistema Integrado: Implantação e suporte ao ERP Collab para total automação.");
   }
-  if (inputs.hasERP === 'no') {
-    arguments_list.push("Implantação Zero-to-One: Configuração completa do ERP parceiro Collab.");
+  if (inputs.internalFinanceTeam === 'yes') {
+    arguments_list.push("Apoio à Equipe Interna: Atuamos como camada de auditoria e BI especializado.");
+  } else if (inputs.internalOpsTeam === 'yes') {
+    arguments_list.push("Foco Estratégico: Liberamos seu time operacional para focar no core business.");
   }
   // -- Advanced Alerts --
   if (erpName.includes("totvs") || erpName.includes("sap")) {
-    alerts.push(`ERP ${erpName.toUpperCase()} detectado: Requer validação técnica de API para integração automática.`);
+    alerts.push(`ERP ${erpName.toUpperCase()} detectado: Requer validação de API para integração automática.`);
+  }
+  if (inputs.internalFinanceTeam === 'yes' && inputs.internalOpsTeam === 'yes' && recommendedPlan === 'essential') {
+    alerts.push("Duplo Time Interno: Avalie se o plano Business (CFO) não agrega mais valor estratégico.");
   }
   if (manualNFSe > 50 && recommendedPlan !== 'premium') {
     alerts.push("Volume de Notas alto: O plano Premium oferece custo por excedente reduzido.");
@@ -96,14 +105,8 @@ export function calculatePricing(inputs: DiagnosticInputs, forcePlan?: PlanType)
   if (monthlyRevenue > 200000 && recommendedPlan === 'essential') {
     alerts.push("Alerta de Escala: O faturamento atual sugere necessidade de controles do plano Business/Premium.");
   }
-  if (inputs.internalOpsTeam === 'yes' && recommendedPlan === 'essential') {
-    alerts.push("Equipe de Operação Própria: Avalie se o foco não deve ser apenas estratégico (CFO).");
-  }
   if (annualRevenue > 10000000) {
     alerts.push("Faturamento > 10M: Recomendamos auditoria trimestral de controladoria.");
-  }
-  if (inputs.needsBudgeting && !inputs.needsDRE) {
-    alerts.push("Inconsistência: Planejamento orçamentário requer acompanhamento via DRE.");
   }
   const totalMonthly = baseFee + overageFees + revenueSurcharge + meetingFees;
   return {

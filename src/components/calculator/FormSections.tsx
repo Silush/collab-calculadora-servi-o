@@ -26,7 +26,7 @@ interface SectionProps {
   control: Control<DiagnosticInputs>;
   setValue: UseFormSetValue<DiagnosticInputs>;
 }
-export const GeneralInfoSection = React.memo(({ register, control, setValue }: SectionProps) => {
+export const GeneralInfoSection = React.memo(({ register, control }: SectionProps) => {
   const hasERP = useWatch({ control, name: 'hasERP' });
   const [open, setOpen] = React.useState(false);
   return (
@@ -51,13 +51,13 @@ export const GeneralInfoSection = React.memo(({ register, control, setValue }: S
                     variant="outline"
                     role="combobox"
                     aria-expanded={open}
-                    className="w-full justify-between font-normal"
+                    className="w-full justify-between font-normal text-left"
                   >
-                    {field.value ? field.value : "Selecione o segmento..."}
+                    <span className="truncate">{field.value ? field.value : "Selecione o segmento..."}</span>
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-[400px] p-0" align="start">
+                <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
                   <Command>
                     <CommandInput placeholder="Buscar segmento..." />
                     <CommandList>
@@ -90,6 +90,14 @@ export const GeneralInfoSection = React.memo(({ register, control, setValue }: S
               </Popover>
             )}
           />
+        </div>
+        <div className="space-y-2">
+          <Label>Nome do Lead</Label>
+          <Input {...register('leadName')} placeholder="Ex: João Silva" />
+        </div>
+        <div className="space-y-2">
+          <Label>Cargo / Função</Label>
+          <Input {...register('leadRole')} placeholder="Ex: CFO, Diretor Financeiro" />
         </div>
         <div className="space-y-2">
           <Label>Faturamento Mensal (R$)</Label>
@@ -131,10 +139,6 @@ export const GeneralInfoSection = React.memo(({ register, control, setValue }: S
             )}
           />
         </div>
-        <div className="space-y-2">
-          <Label>Responsável Comercial (para assinatura)</Label>
-          <Input {...register('commercialRep')} placeholder="Seu nome para assinatura" />
-        </div>
         <div className="space-y-3">
           <Label>Já possui ERP?</Label>
           <Controller
@@ -158,9 +162,33 @@ export const GeneralInfoSection = React.memo(({ register, control, setValue }: S
             )}
           />
         </div>
-        <AnimatePresence>
-          {hasERP === 'yes' && (
+        <div className="space-y-3">
+          <Label>Possui equipe de operação própria?</Label>
+          <Controller
+            control={control}
+            name="internalOpsTeam"
+            render={({ field }) => (
+              <RadioGroup
+                value={field.value}
+                onValueChange={field.onChange}
+                className="flex items-center space-x-4 pt-1"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="yes" id="ops-yes" />
+                  <Label htmlFor="ops-yes" className="font-normal">Sim</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="no" id="ops-no" />
+                  <Label htmlFor="ops-no" className="font-normal">Não</Label>
+                </div>
+              </RadioGroup>
+            )}
+          />
+        </div>
+        <AnimatePresence mode="wait">
+          {hasERP === 'yes' ? (
             <motion.div
+              key="erp-name"
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
@@ -169,8 +197,42 @@ export const GeneralInfoSection = React.memo(({ register, control, setValue }: S
               <Label>Nome do ERP Atual</Label>
               <Input {...register('erpName')} placeholder="Ex: SAP, Totvs, Omie..." />
             </motion.div>
+          ) : (
+            <motion.div
+              key="collab-erp"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="space-y-3 overflow-hidden md:col-span-2"
+            >
+              <Label>Deseja implantar o ERP parceiro Collab?</Label>
+              <Controller
+                control={control}
+                name="needsCollabERP"
+                render={({ field }) => (
+                  <RadioGroup
+                    value={field.value}
+                    onValueChange={field.onChange}
+                    className="flex items-center space-x-4 pt-1"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="yes" id="collab-erp-yes" />
+                      <Label htmlFor="collab-erp-yes" className="font-normal">Sim</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="no" id="collab-erp-no" />
+                      <Label htmlFor="collab-erp-no" className="font-normal">Não</Label>
+                    </div>
+                  </RadioGroup>
+                )}
+              />
+            </motion.div>
           )}
         </AnimatePresence>
+        <div className="space-y-2 md:col-span-2">
+          <Label>Responsável Comercial (Collab)</Label>
+          <Input {...register('commercialRep')} placeholder="Seu nome para a proposta" />
+        </div>
       </CardContent>
     </Card>
   );
@@ -278,21 +340,55 @@ export const StrategicSection = React.memo(({ control, setValue }: Pick<SectionP
   ];
   return (
     <Card className="shadow-sm border-slate-200">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
         <CardTitle className="text-lg font-bold">Necessidades Consultivas</CardTitle>
         <Switch checked={!!needsStrategic} onCheckedChange={(val) => setValue('needsStrategic', val)} />
       </CardHeader>
-      <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {items.map(item => (
-          <div key={item.name} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100 hover:border-slate-200 transition-colors">
-            <Label className="text-sm font-medium">{item.label}</Label>
-            <Switch
-              disabled={!needsStrategic}
-              checked={!!(allValues as any)[item.name]}
-              onCheckedChange={(val) => setValue(item.name as any, val)}
+      <CardContent className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {items.map(item => (
+            <div key={item.name} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100 hover:border-slate-200 transition-colors">
+              <Label className="text-sm font-medium">{item.label}</Label>
+              <Switch
+                disabled={!needsStrategic}
+                checked={!!(allValues as any)[item.name]}
+                onCheckedChange={(val) => setValue(item.name as any, val)}
+              />
+            </div>
+          ))}
+        </div>
+        <div className="border-t pt-6 space-y-6">
+          <div className="flex items-center justify-between">
+            <Label className="text-sm font-bold">Equipe Financeira Interna?</Label>
+            <Controller
+              control={control}
+              name="internalFinanceTeam"
+              render={({ field }) => (
+                <RadioGroup
+                  value={field.value}
+                  onValueChange={field.onChange}
+                  className="flex items-center space-x-4"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="yes" id="fin-yes" />
+                    <Label htmlFor="fin-yes" className="text-xs font-normal">Sim</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="no" id="fin-no" />
+                    <Label htmlFor="fin-no" className="text-xs font-normal">Não</Label>
+                  </div>
+                </RadioGroup>
+              )}
             />
           </div>
-        ))}
+          <VolumeControl
+            label="Horas de Consultoria Adicionais/Mês"
+            name="meetingHours"
+            control={control}
+            setValue={setValue}
+            suffix="horas"
+          />
+        </div>
       </CardContent>
     </Card>
   );
