@@ -26,7 +26,7 @@ export interface DiagnosticInputs {
   monthlyRevenue: number;
   annualRevenue: number;
   hasERP: "yes" | "no";
-  erpName?: string;
+  erpName: string;
   needsCollabERP: "yes" | "no";
   internalFinanceTeam: "yes" | "no";
   internalOpsTeam: "yes" | "no";
@@ -43,7 +43,7 @@ export interface DiagnosticInputs {
   needsControllership: boolean;
   meetingHours: number;
   commercialRep: string;
-  notes?: string;
+  notes: string;
 }
 export type PlanType = 'essential' | 'business' | 'premium';
 export interface PricingResult {

@@ -1,7 +1,7 @@
 import { DiagnosticInputs, PricingResult, PlanType } from "@shared/types";
 import { PLANS } from "./plans";
 import { formatCurrency } from "./utils";
-export function calculatePricing(inputs: DiagnosticInputs): PricingResult {
+export function calculatePricing(inputs: DiagnosticInputs, forcePlan?: PlanType): PricingResult {
   const monthlyRevenue = Number(inputs.monthlyRevenue) || 0;
   const annualRevenue = Number(inputs.annualRevenue) || 0;
   const needsOps = Boolean(inputs.needsOps);
@@ -12,16 +12,18 @@ export function calculatePricing(inputs: DiagnosticInputs): PricingResult {
   const meetingHours = Number(inputs.meetingHours) || 0;
   const needsStrategicMeetings = Boolean(inputs.needsStrategicMeetings);
   const needsAnalyticalMeetings = Boolean(inputs.needsAnalyticalMeetings);
-  // 1. Recommendation Logic
-  let recommendedPlan: PlanType = 'essential';
-  if (needsOps && needsStrategic) {
-    recommendedPlan = 'premium';
-  } else if (needsStrategic || annualRevenue > 4800000) {
-    recommendedPlan = 'business';
-  } else if (needsOps && monthlyRevenue <= 200000) {
-    recommendedPlan = 'essential';
-  } else if (needsOps) {
-    recommendedPlan = 'premium';
+  // 1. Recommendation Logic (skipped if forcePlan is provided)
+  let recommendedPlan: PlanType = forcePlan || 'essential';
+  if (!forcePlan) {
+    if (needsOps && needsStrategic) {
+      recommendedPlan = 'premium';
+    } else if (needsStrategic || annualRevenue > 4800000) {
+      recommendedPlan = 'business';
+    } else if (needsOps && monthlyRevenue <= 200000) {
+      recommendedPlan = 'essential';
+    } else if (needsOps) {
+      recommendedPlan = 'premium';
+    }
   }
   const plan = PLANS[recommendedPlan];
   const breakdown: PricingResult['breakdown'] = [];
@@ -30,9 +32,9 @@ export function calculatePricing(inputs: DiagnosticInputs): PricingResult {
   const setupFee = plan.setupFee;
   breakdown.push({ label: "Plano Base", value: baseFee, type: 'base' });
   if (setupFee > 0) breakdown.push({ label: "Taxa de Implantação", value: setupFee, type: 'setup' });
-  // 3. Operational Overages
+  // 3. Operational Overages (Applied to Essential and Premium)
   let overageFees = 0;
-  if (recommendedPlan !== 'business') {
+  if (recommendedPlan === 'essential' || recommendedPlan === 'premium') {
     const p = plan as typeof PLANS.essential | typeof PLANS.premium;
     const bankOver = Math.max(0, manualBankSchedules - p.limits.bankSchedules);
     const nfseOver = Math.max(0, manualNFSe - p.limits.nfse);
@@ -45,7 +47,7 @@ export function calculatePricing(inputs: DiagnosticInputs): PricingResult {
       breakdown.push({ label: "Excedentes Operacionais", value: overageFees, type: 'addon' });
     }
   }
-  // 4. Revenue Tiers (Business & Premium)
+  // 4. Revenue Tiers (Applied to Business and Premium)
   let revenueSurcharge = 0;
   if (recommendedPlan === 'business' || recommendedPlan === 'premium') {
     const p = plan as typeof PLANS.business | typeof PLANS.premium;
@@ -56,7 +58,7 @@ export function calculatePricing(inputs: DiagnosticInputs): PricingResult {
       breakdown.push({ label: "Adicional por Faturamento", value: revenueSurcharge, type: 'addon' });
     }
   }
-  // 5. Meeting Hours
+  // 5. Meeting Hours (Uses the specific plan's meetingUnit)
   const totalMeetings = meetingHours + (needsStrategicMeetings ? 2 : 0) + (needsAnalyticalMeetings ? 2 : 0);
   const meetingFees = totalMeetings * plan.meetingUnit;
   if (meetingFees > 0) {
@@ -85,12 +87,6 @@ export function calculatePricing(inputs: DiagnosticInputs): PricingResult {
   }
   if (monthlyRevenue > 200000 && recommendedPlan === 'essential') {
     alerts.push("Faturamento mensal acima do limite sugerido para o plano Essential.");
-  }
-  if (inputs.hasERP === 'no' && (needsOps || inputs.needsCollabERP === 'yes')) {
-    alerts.push("Recomendado: Implantação do ERP Collab para garantir automação e compliance.");
-  }
-  if (manualBankSchedules > 100 || manualNFSe > 100) {
-    alerts.push("Alto volume operacional identificado: Recomenda-se revisão de processos para escalabilidade.");
   }
   const totalMonthly = baseFee + overageFees + revenueSurcharge + meetingFees;
   return {

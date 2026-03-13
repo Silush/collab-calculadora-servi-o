@@ -23,7 +23,7 @@ const schema = z.object({
   monthlyRevenue: z.number().min(0),
   annualRevenue: z.number().min(0),
   hasERP: z.enum(["yes", "no"]),
-  erpName: z.string().optional().or(z.literal('')),
+  erpName: z.string().default(""),
   needsCollabERP: z.enum(["yes", "no"]),
   internalFinanceTeam: z.enum(["yes", "no"]),
   internalOpsTeam: z.enum(["yes", "no"]),
@@ -40,7 +40,7 @@ const schema = z.object({
   needsControllership: z.boolean(),
   meetingHours: z.number().min(0),
   commercialRep: z.string().min(1, "Obrigatório"),
-  notes: z.string().optional().default(""),
+  notes: z.string().default(""),
 });
 const defaultValues: DiagnosticInputs = {
   companyName: '',
@@ -155,9 +155,7 @@ export function HomePage() {
               <h2 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">Diagnóstico Comercial</h2>
               <p className="text-slate-500 mt-2 font-medium">Configure as necessidades operacionais e estratégicas para gerar a proposta.</p>
             </div>
-            {control && (
-              <DiagnosticForm register={register} control={control} setValue={setValue} />
-            )}
+            <DiagnosticForm register={register} control={control} setValue={setValue} />
           </div>
           <div className="lg:col-span-5 relative print:col-span-12">
             <ResultsPanel result={pricingResult} companyName={formValues.companyName} commercialRep={formValues.commercialRep} />
