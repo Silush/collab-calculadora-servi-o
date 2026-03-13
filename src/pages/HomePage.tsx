@@ -23,6 +23,7 @@ const schema = z.object({
   monthlyRevenue: z.number().default(0),
   annualRevenue: z.number().default(0),
   hasERP: z.enum(["yes", "no"]).default("no"),
+  erpName: z.string().optional().default(''),
   needsCollabERP: z.enum(["yes", "no"]).default("no"),
   internalFinanceTeam: z.enum(["yes", "no"]).default("no"),
   internalOpsTeam: z.enum(["yes", "no"]).default("no"),
@@ -39,7 +40,7 @@ const schema = z.object({
   needsControllership: z.boolean().default(false),
   meetingHours: z.number().default(0),
   commercialRep: z.string().default(''),
-  notes: z.string().optional(),
+  notes: z.string().optional().default(''),
 });
 const defaultValues: DiagnosticInputs = {
   companyName: '',
@@ -49,6 +50,7 @@ const defaultValues: DiagnosticInputs = {
   monthlyRevenue: 0,
   annualRevenue: 0,
   hasERP: 'no',
+  erpName: '',
   needsCollabERP: 'no',
   internalFinanceTeam: 'no',
   internalOpsTeam: 'no',

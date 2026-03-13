@@ -1,162 +1,41 @@
-# Cloudflare Workers React Starter Template
-
-[cloudflarebutton]
-
-A production-ready full-stack application template powered by Cloudflare Workers. Features a modern React frontend with Tailwind CSS & shadcn/ui, a Hono-based API backend, and Durable Objects for scalable, stateful entities (Users, ChatBoards with Messages). Includes TanStack Query for optimistic data fetching, theme support, error handling, and hot reload development.
-
-## ✨ Key Features
-
-- **Full-Stack TypeScript**: Shared types between frontend and Workers backend.
-- **Durable Objects Entities**: Auto-indexed storage for Users and ChatBoards (chats with embedded messages).
-- **Pre-seeded Demo Data**: Users, chats, and messages load automatically.
-- **Modern UI**: shadcn/ui components, Tailwind with custom animations/gradients, dark mode.
-- **API Routes**: CRUD for users/chats/messages (`/api/users`, `/api/chats`, `/api/chats/:id/messages`).
-- **Development Workflow**: Vite HMR, Bun-powered, Wrangler deployment.
-- **Production-Ready**: CORS, logging, error boundaries, client error reporting.
-- **SPA Assets**: Cloudflare Assets for single-page app handling.
-
-## 🛠 Tech Stack
-
-| Frontend | Backend | Tools |
-|----------|---------|-------|
-| React 18 | Hono 4 | Bun |
-| Vite 6 | Durable Objects | Cloudflare Workers |
-| Tailwind CSS | TypeScript | Wrangler |
-| shadcn/ui | Cloudflare SQLite (migrations) | TanStack Query |
-| Lucide Icons |  | Zod |
-| React Router |  | Sonner (Toasts) |
-| Framer Motion |  | Immer/Zustand |
-
-## 🚀 Quick Start
-
-1. **Prerequisites**:
-   - [Bun](https://bun.sh/) installed
-   - [Cloudflare CLI (Wrangler)](https://developers.cloudflare.com/workers/wrangler/install-and-update/) installed
-   - Cloudflare account (free tier works)
-
-2. **Clone & Install**:
-   ```bash
-   git clone <your-repo-url>
-   cd collab-dealdesk-lmm7fdbnqbsgjnl908ecn
-   bun install
-   ```
-
-3. **Development**:
-   ```bash
-   bun dev
-   ```
-   Open [http://localhost:3000](http://localhost:3000). API at `/api/health`.
-
-4. **Type Generation** (Cloudflare types):
-   ```bash
-   bun run cf-typegen
-   ```
-
-## 📚 Usage Examples
-
-### API Endpoints (Hono-powered)
-
-- **Users**:
-  ```bash
-  # List (paginated)
-  curl "http://localhost:8787/api/users?limit=10"
-
-  # Create
-  curl -X POST http://localhost:8787/api/users \
-    -H "Content-Type: application/json" \
-    -d '{"name": "New User"}'
-
-  # Delete
-  curl -X DELETE http://localhost:8787/api/users/u1
-  ```
-
-- **Chats**:
-  ```bash
-  # List
-  curl "http://localhost:8787/api/chats"
-
-  # Create
-  curl -X POST http://localhost:8787/api/chats \
-    -d '{"title": "New Chat"}'
-
-  # Messages in chat
-  curl "http://localhost:8787/api/chats/c1/messages"
-
-  # Send message
-  curl -X POST http://localhost:8787/api/chats/c1/messages \
-    -d '{"userId": "u1", "text": "Hello!"}'
-  ```
-
-Demo data auto-seeds on first API call (Users: A/B, Chat: General).
-
-### Frontend Customization
-
-- Replace `src/pages/HomePage.tsx` with your app.
-- Add routes in `src/main.tsx` (React Router).
-- Extend entities in `worker/entities.ts` (uses `core-utils.ts` library).
-- Add routes in `worker/user-routes.ts`.
-- UI: Use shadcn components (`@/components/ui/*`), hooks (`@/hooks/*`).
-
-## 🔧 Development
-
-| Command | Description |
-|---------|-------------|
-| `bun dev` | Start dev server (Vite + Worker proxy) |
-| `bun build` | Build frontend assets |
-| `bun lint` | Lint codebase |
-| `bun preview` | Local preview of production build |
-| `wrangler dev` | Direct Worker dev (bypass Vite) |
-| `bun run cf-typegen` | Generate `worker/env.d.ts` types |
-
-**Hot Reload**: Frontend HMR via Vite. Backend auto-reloads `user-routes.ts`.
-
-**Customizing Entities**:
-- Extend `IndexedEntity` in `worker/entities.ts`.
-- Routes auto-wire via `userRoutes()` export.
-- Indexes handle pagination (`?cursor=&limit=10`).
-
-## ☁️ Deployment
-
-1. **Login**:
-   ```bash
-   wrangler login
-   wrangler whoami
-   ```
-
-2. **Configure** (`wrangler.jsonc`):
-   - Set `account_id` if needed.
-   - Assets auto-deploy to Cloudflare Pages.
-
-3. **Deploy**:
-   ```bash
-   bun run deploy
-   ```
-   Or:
-   ```bash
-   bun build && wrangler deploy
-   ```
-
-[cloudflarebutton]
-
-**Custom Domain**: `wrangler deploy --var ASSETS_URL:https://your-pages-domain.pages.dev`.
-
-**Durable Objects**: Auto-migrated via `wrangler.jsonc` (SQLite-backed).
-
-## 🤝 Contributing
-
-1. Fork & clone.
-2. `bun install`.
-3. `bun dev`.
-4. Submit PR.
-
-## 📄 License
-
-MIT. See [LICENSE](LICENSE) for details.
-
-## 🙌 Support
-
-- [Cloudflare Workers Docs](https://developers.cloudflare.com/workers/)
-- [shadcn/ui](https://ui.shadcn.com/)
-- File issues here.
-
-Built with ❤️ for Cloudflare Developers.
+# 📊 Calculadora Comercial - Collab DealDesk
+![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
+![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
+![Cloudflare](https://img.shields.io/badge/Cloudflare_Workers-F38020?style=for-the-badge&logo=cloudflare&logoColor=white)
+## 🚀 Visão Geral
+A **Collab DealDesk** é uma ferramenta interna avançada desenvolvida para a equipe comercial da **Collab Gestão Empresarial**. Ela automatiza o diagnóstico de leads durante reuniões de vendas, recomendando o plano ideal com base em regras de negócio complexas e gerando propostas financeiras instantâneas.
+**MVP Funcional:**
+- Formulário de diagnóstico em tempo real (Real-time engine).
+- Backend persistente para salvar e recuperar simulações (Cloudflare Durable Objects).
+- Geração de proposta comercial formatada para cópia e impressão.
+- Histórico de simulações na nuvem.
+- Interface responsiva com suporte a Dark Mode.
+## 📋 Como Usar
+1. **Dados Gerais:** Insira o nome da empresa, faturamento (mensal/anual) e informações do ERP atual.
+2. **Volume Operacional:** Defina a volumetria de agendamentos bancários, emissões de NFSe e boletos usando os sliders.
+3. **Necessidades Consultivas:** Marque os itens estratégicos desejados (DRE, BI, Reuniões).
+4. **Análise de Resultados:** O painel lateral atualizará automaticamente recomendando o plano (Essential, Business ou Premium), detalhando custos, economias e argumentos de venda.
+5. **Ação:** Utilize o botão "Copiar Proposta" para enviar ao cliente ou "Imprimir/PDF" para gerar o documento formal.
+6. **Persistência:** Clique em "Salvar Nuvem" para registrar a simulação no banco de dados.
+## 💰 Regras de Negócio (Exatas)
+*   **Essential BPO:** R$ 1.621/mês + R$ 1.800 setup. Limite de 200k fat/mês. Inclui 20 unid. operacionais. R$ 15/excedente.
+*   **Business CFO:** R$ 4.730/mês (sem setup). Faturamento > R$ 4.8M/ano. Adicional de R$ 1k/milhão excedente. R$ 500/h extra.
+*   **Premium Finance:** R$ 5.970/mês + R$ 3.200 setup. 40 unid. operacionais inclusas. R$ 10/excedente. R$ 300/h extra. R$ 800/milhão excedente.
+## 🛠️ Tech Stack
+- **Frontend:** React 18, Vite, Tailwind CSS, Framer Motion.
+- **Componentes:** Shadcn UI (Radix UI).
+- **Gestão de Formulários:** React Hook Form + Zod (Validação).
+- **Data Fetching:** TanStack Query (React Query).
+- **Backend:** Hono Framework rodando em Cloudflare Workers.
+- **Storage:** Durable Objects (Persistência Transacional).
+## 🔧 Comandos
+- **Desenvolvimento:** `bun dev`
+- **Build & Preview:** `bun preview`
+- **Deploy:** `bun run deploy`
+## 📱 Features Próximas (Roadmap)
+- Geração de PDF nativa no navegador.
+- Link único para compartilhamento externo da simulação.
+- Integração direta (Webhooks) com CRM.
+- Motor de regras customizável via painel admin.
+---
+*Desenvolvido para Collab Gestão Empresarial.*

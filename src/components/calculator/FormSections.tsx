@@ -9,12 +9,14 @@ import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
 import { SEGMENTS } from '@/lib/plans';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { motion, AnimatePresence } from 'framer-motion';
 interface SectionProps {
   register: UseFormRegister<DiagnosticInputs>;
   control: Control<DiagnosticInputs>;
   setValue: UseFormSetValue<DiagnosticInputs>;
 }
-export function GeneralInfoSection({ register, setValue }: Pick<SectionProps, 'register' | 'setValue'>) {
+export function GeneralInfoSection({ register, control, setValue }: Pick<SectionProps, 'register' | 'control' | 'setValue'>) {
+  const hasERP = useWatch({ control, name: 'hasERP' });
   return (
     <Card className="shadow-sm border-slate-200">
       <CardHeader>
@@ -48,13 +50,34 @@ export function GeneralInfoSection({ register, setValue }: Pick<SectionProps, 'r
         </div>
         <div className="space-y-3">
           <Label>Já possui ERP?</Label>
-          <RadioGroup defaultValue="no" onValueChange={(val) => setValue('hasERP', val as "yes" | "no")}>
+          <RadioGroup 
+            value={hasERP} 
+            onValueChange={(val) => setValue('hasERP', val as "yes" | "no")}
+            className="flex items-center space-x-4 pt-1"
+          >
             <div className="flex items-center space-x-2">
-              <RadioGroupItem value="yes" id="erp-yes" /><Label htmlFor="erp-yes">Sim</Label>
-              <RadioGroupItem value="no" id="erp-no" /><Label htmlFor="erp-no">Não</Label>
+              <RadioGroupItem value="yes" id="erp-yes" />
+              <Label htmlFor="erp-yes" className="font-normal">Sim</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="no" id="erp-no" />
+              <Label htmlFor="erp-no" className="font-normal">Não</Label>
             </div>
           </RadioGroup>
         </div>
+        <AnimatePresence>
+          {hasERP === 'yes' && (
+            <motion.div 
+              initial={{ opacity: 0, height: 0 }} 
+              animate={{ opacity: 1, height: 'auto' }} 
+              exit={{ opacity: 0, height: 0 }}
+              className="space-y-2 overflow-hidden"
+            >
+              <Label>Nome do ERP Atual</Label>
+              <Input {...register('erpName')} placeholder="Ex: SAP, Totvs, Omie..." />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </CardContent>
     </Card>
   );

@@ -16,7 +16,7 @@ interface ResultsPanelProps {
   commercialRep?: string;
 }
 export function ResultsPanel({ result, companyName, commercialRep }: ResultsPanelProps) {
-  const copyProposal = () => {
+  const copyProposal = async () => {
     const today = format(new Date(), "dd/MM/yyyy", { locale: ptBR });
     const text = `PROPOSTA COMERCIAL - COLLAB DEALDESK
 Cliente: ${companyName || 'Lead Diagnosticado'}
@@ -29,8 +29,14 @@ ${result.arguments.map(a => `- ${a}`).join('\n')}
 COMPOSIÇÃO:
 ${result.breakdown.map(b => `- ${b.label}: ${formatCurrency(b.value)}`).join('\n')}
 Proposta preparada por: ${commercialRep || 'Consultor Collab'} | Collab Gestão Empresarial | Data: ${today}`;
-    navigator.clipboard.writeText(text);
-    toast.success("Proposta copiada para o clipboard!");
+    try {
+      if (!navigator.clipboard) throw new Error("Clipboard API não disponível");
+      await navigator.clipboard.writeText(text);
+      toast.success("Proposta copiada para o clipboard!");
+    } catch (err) {
+      console.error("Erro ao copiar proposta:", err);
+      toast.error("O acesso ao clipboard foi bloqueado pelo navegador. Por favor, utilize o botão 'Imprimir / PDF' para salvar a proposta.");
+    }
   };
   const handlePrint = () => {
     window.print();

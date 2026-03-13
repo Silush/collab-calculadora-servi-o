@@ -1,7 +1,7 @@
 import React from 'react';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { History, Trash2, ArrowRight, Loader2 } from "lucide-react";
+import { History, Trash2, ArrowRight } from "lucide-react";
 import { SimulationRecord } from "@shared/types";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
@@ -36,8 +36,11 @@ export function HistoryDrawer({ onLoad }: HistoryDrawerProps) {
         </Button>
       </SheetTrigger>
       <SheetContent className="w-[400px] sm:w-[540px] overflow-y-auto">
-        <SheetHeader className="flex flex-row items-center justify-between mb-6">
+        <SheetHeader className="flex flex-col mb-6">
           <SheetTitle>Simulações Recentes</SheetTitle>
+          <SheetDescription>
+            Visualize e recupere diagnósticos comerciais realizados anteriormente salvos na nuvem.
+          </SheetDescription>
         </SheetHeader>
         <div className="space-y-4">
           {isLoading ? (
