@@ -4,12 +4,23 @@ import { DiagnosticInputs } from '@shared/types';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
-import { SEGMENTS } from '@/lib/plans';
+import { SEGMENT_GROUPS } from '@/lib/plans';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Button } from '@/components/ui/button';
+import { Check, ChevronsUpDown } from 'lucide-react';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command';
+import { cn } from '@/lib/utils';
 interface SectionProps {
   register: UseFormRegister<DiagnosticInputs>;
   control: Control<DiagnosticInputs>;
@@ -17,6 +28,8 @@ interface SectionProps {
 }
 export function GeneralInfoSection({ register, control, setValue }: SectionProps) {
   const hasERP = useWatch({ control, name: 'hasERP' });
+  const selectedSegment = useWatch({ control, name: 'segment' });
+  const [open, setOpen] = React.useState(false);
   return (
     <Card className="shadow-sm border-slate-200">
       <CardHeader>
@@ -27,14 +40,53 @@ export function GeneralInfoSection({ register, control, setValue }: SectionProps
           <Label>Nome da Empresa</Label>
           <Input {...register('companyName')} placeholder="Ex: Collab Tecnologia LTDA" />
         </div>
-        <div className="space-y-2">
-          <Label>Segmento</Label>
-          <Select onValueChange={(val) => setValue('segment', val)}>
-            <SelectTrigger><SelectValue placeholder="Selecione o segmento..." /></SelectTrigger>
-            <SelectContent>
-              {SEGMENTS.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-            </SelectContent>
-          </Select>
+        <div className="space-y-2 flex flex-col">
+          <Label className="mb-2">Segmento</Label>
+          <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                role="combobox"
+                aria-expanded={open}
+                className="w-full justify-between font-normal"
+              >
+                {selectedSegment
+                  ? selectedSegment
+                  : "Selecione o segmento..."}
+                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-full p-0" align="start">
+              <Command className="w-full">
+                <CommandInput placeholder="Buscar segmento..." />
+                <CommandList>
+                  <CommandEmpty>Nenhum segmento encontrado.</CommandEmpty>
+                  {SEGMENT_GROUPS.map((group) => (
+                    <CommandGroup key={group.label} heading={group.label}>
+                      {group.items.map((item) => (
+                        <CommandItem
+                          key={item}
+                          value={item}
+                          onSelect={(currentValue) => {
+                            setValue('segment', currentValue);
+                            setOpen(false);
+                          }}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              selectedSegment === item ? "opacity-100" : "opacity-0"
+                            )}
+                          />
+                          {item}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  ))}
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
         </div>
         <div className="space-y-2">
           <Label>Faturamento Mensal (R$)</Label>
@@ -71,7 +123,7 @@ export function GeneralInfoSection({ register, control, setValue }: SectionProps
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="space-y-2 overflow-hidden"
+              className="space-y-2 overflow-hidden md:col-span-2"
             >
               <Label>Nome do ERP Atual</Label>
               <Input {...register('erpName')} placeholder="Ex: SAP, Totvs, Omie..." />
