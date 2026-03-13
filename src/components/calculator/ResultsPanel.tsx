@@ -11,6 +11,7 @@ import { formatCurrency, cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { calculatePricing } from '@/lib/pricing-engine';
+import { PLANS } from '@/lib/plans';
 import { useFormContext, useWatch } from 'react-hook-form';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 import { CollabLogo } from '@/components/ui/collab-logo';
@@ -27,30 +28,43 @@ const planDisplayNames: Record<PlanType, string> = {
 };
 export function ResultsPanel({ result, activeId }: ResultsPanelProps) {
   const context = useFormContext<DiagnosticInputs>();
-  const watchedValues = useWatch({
-    control: context?.control,
-  }) as DiagnosticInputs;
-  const currentInputs = useMemo(() => watchedValues || ({} as DiagnosticInputs), [watchedValues]);
+  // Use specific fields to reduce unnecessary re-renders
+  const companyName = useWatch({ control: context.control, name: 'companyName' });
+  const leadName = useWatch({ control: context.control, name: 'leadName' });
+  const leadRole = useWatch({ control: context.control, name: 'leadRole' });
+  const annualRevenue = useWatch({ control: context.control, name: 'annualRevenue' });
+  const segment = useWatch({ control: context.control, name: 'segment' });
+  const commercialRep = useWatch({ control: context.control, name: 'commercialRep' });
+  const hasERP = useWatch({ control: context.control, name: 'hasERP' });
+  const erpName = useWatch({ control: context.control, name: 'erpName' });
+  const bankSchedules = useWatch({ control: context.control, name: 'manualBankSchedules' }) || 0;
+  const nfse = useWatch({ control: context.control, name: 'manualNFSe' }) || 0;
+  const boletos = useWatch({ control: context.control, name: 'monthlyBoletos' }) || 0;
+  const currentInputs = useMemo(() => ({
+    companyName, leadName, leadRole, annualRevenue, segment, commercialRep, 
+    hasERP, erpName, manualBankSchedules: bankSchedules, manualNFSe: nfse, monthlyBoletos: boletos
+  }), [companyName, leadName, leadRole, annualRevenue, segment, commercialRep, hasERP, erpName, bankSchedules, nfse, boletos]);
   const comparison = useMemo(() => {
-    if (!currentInputs.companyName && !currentInputs.monthlyRevenue) return [];
+    if (!companyName && !annualRevenue) return [];
     const plans: PlanType[] = ['essential', 'business', 'premium'];
-    return plans.map(p => calculatePricing(currentInputs, p));
-  }, [currentInputs]);
+    return plans.map(p => calculatePricing(context.getValues(), p));
+  }, [context, companyName, annualRevenue]);
   const shareUrl = activeId ? `${window.location.origin}?id=${activeId}` : null;
   const copyProposal = async () => {
-    if (!currentInputs.commercialRep) {
+    if (!commercialRep) {
       return toast.warning("Identifique-se como 'Responsável Comercial' antes de gerar a proposta.");
     }
     const today = format(new Date(), "dd/MM/yyyy", { locale: ptBR });
     const planName = planDisplayNames[result.recommendedPlan];
+    const planLimits = (PLANS as any)[result.recommendedPlan]?.limits;
     const text = `PROPOSTA COMERCIAL - COLLAB GESTÃO EMPRESARIAL
 1. DADOS DO CLIENTE
-Empresa: ${currentInputs.companyName || 'N/A'}
-Contato: ${currentInputs.leadName || 'Não Informado'} (${currentInputs.leadRole || 'Cargo não informado'})
-Faturamento Anual: ${formatCurrency(currentInputs.annualRevenue)}
+Empresa: ${companyName || 'N/A'}
+Contato: ${leadName || 'Não Informado'} (${leadRole || 'Cargo não informado'})
+Faturamento Anual: ${formatCurrency(annualRevenue)}
 2. DIAGNÓSTICO OPERACIONAL
-Agendamentos: ${currentInputs.manualBankSchedules || 0}/mês
-NFSe: ${currentInputs.manualNFSe || 0}/mês
+Volume Atual: ${bankSchedules} agendamentos / ${nfse} NFSe
+${planLimits ? `Franquia Inclusa: ${planLimits.bankSchedules} agendamentos, ${planLimits.nfse} NFSe, ${planLimits.boletos} boletos.` : 'Escopo focado em suporte estratégico CFO.'}
 3. RECOMENDAÇÃO TÉCNICA: ${planName.toUpperCase()}
 ${result.arguments.length > 0 ? result.arguments.map(a => `• ${a}`).join('\n') : '• Solução customizada para as necessidades operacionais identificadas.'}
 4. INVESTIMENTO
@@ -58,7 +72,7 @@ ${result.breakdown.map(item => `- ${item.label}: ${formatCurrency(item.value)}`)
 MENSALIDADE TOTAL: ${formatCurrency(result.totalMonthly)}
 TAXA DE IMPLANTAÇÃO: ${formatCurrency(result.totalInitial)}
 ---
-Emitido por: ${currentInputs.commercialRep}
+Emitido por: ${commercialRep}
 Collab Gestão Empresarial | ${today}`;
     try {
       await navigator.clipboard.writeText(text);
@@ -80,7 +94,7 @@ Collab Gestão Empresarial | ${today}`;
   };
   const currentYear = new Date().getFullYear();
   return (
-    <div className="sticky top-28 space-y-6 print:static print:top-0">
+    <div className="sticky top-24 space-y-6 print:static print:top-0">
       <Card className={cn(
         "overflow-hidden border-2 shadow-xl transition-all duration-500 print:shadow-none print:border-slate-200 print:w-full print:bg-white",
         planStyles[result.recommendedPlan]
@@ -158,11 +172,11 @@ Collab Gestão Empresarial | ${today}`;
             <section className="space-y-4">
               <h3 className="text-sm font-black uppercase text-slate-900 tracking-widest border-b-2 border-slate-100 pb-2">I. Parâmetros de Diagnóstico</h3>
               <div className="grid grid-cols-2 gap-x-16 gap-y-4 text-[12px]">
-                <div><span className="text-slate-400 font-bold uppercase text-[10px] block">Empresa</span> <span className="font-bold text-slate-900">{currentInputs.companyName || 'N/A'}</span></div>
-                <div><span className="text-slate-400 font-bold uppercase text-[10px] block">Segmento</span> <span className="font-bold text-slate-900">{currentInputs.segment || 'N/A'}</span></div>
-                <div><span className="text-slate-400 font-bold uppercase text-[10px] block">Faturamento Anual</span> <span className="font-bold text-slate-900">{formatCurrency(currentInputs.annualRevenue)}</span></div>
-                <div><span className="text-slate-400 font-bold uppercase text-[10px] block">ERP Atual</span> <span className="font-bold text-slate-900">{currentInputs.hasERP === 'yes' ? currentInputs.erpName : 'Nenhum'}</span></div>
-                <div className="col-span-2"><span className="text-slate-400 font-bold uppercase text-[10px] block">Volumetria Operacional</span> <span className="font-bold text-slate-900">{currentInputs.manualBankSchedules || 0} agendamentos | {currentInputs.manualNFSe || 0} emissões NFSe | {currentInputs.monthlyBoletos || 0} boletos</span></div>
+                <div><span className="text-slate-400 font-bold uppercase text-[10px] block">Empresa</span> <span className="font-bold text-slate-900">{companyName || 'N/A'}</span></div>
+                <div><span className="text-slate-400 font-bold uppercase text-[10px] block">Segmento</span> <span className="font-bold text-slate-900">{segment || 'N/A'}</span></div>
+                <div><span className="text-slate-400 font-bold uppercase text-[10px] block">Faturamento Anual</span> <span className="font-bold text-slate-900">{formatCurrency(annualRevenue)}</span></div>
+                <div><span className="text-slate-400 font-bold uppercase text-[10px] block">ERP Atual</span> <span className="font-bold text-slate-900">{hasERP === 'yes' ? erpName : 'Nenhum'}</span></div>
+                <div className="col-span-2"><span className="text-slate-400 font-bold uppercase text-[10px] block">Volumetria Operacional</span> <span className="font-bold text-slate-900">{bankSchedules} agendamentos | {nfse} emissões NFSe | {boletos} boletos</span></div>
               </div>
             </section>
             <section className="space-y-4">
@@ -197,7 +211,7 @@ Collab Gestão Empresarial | ${today}`;
               </div>
               <div className="w-72 text-center">
                 <div className="border-t-2 border-slate-900 pt-4 font-black text-sm text-slate-900 uppercase">
-                  {currentInputs.commercialRep || 'Consultor Collab'}
+                  {commercialRep || 'Consultor Collab'}
                 </div>
                 <div className="text-[10px] text-slate-500 uppercase tracking-[0.3em] mt-2">
                   Responsável Comercial

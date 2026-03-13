@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
-import { Check, ChevronsUpDown, Minus, Plus } from 'lucide-react';
+import { Check, ChevronsUpDown, Minus, Plus, Wand2 } from 'lucide-react';
 import { NumericFormat } from 'react-number-format';
 import {
   Command,
@@ -26,9 +26,16 @@ interface SectionProps {
   control: Control<DiagnosticInputs>;
   setValue: UseFormSetValue<DiagnosticInputs>;
 }
-export const GeneralInfoSection = React.memo(({ register, control }: SectionProps) => {
+export const GeneralInfoSection = React.memo(({ register, control, setValue }: SectionProps) => {
   const hasERP = useWatch({ control, name: 'hasERP' });
+  const monthlyRevenue = useWatch({ control, name: 'monthlyRevenue' }) || 0;
+  const annualRevenue = useWatch({ control, name: 'annualRevenue' }) || 0;
   const [open, setOpen] = React.useState(false);
+  const syncAnnualRevenue = () => {
+    if (monthlyRevenue > 0) {
+      setValue('annualRevenue', monthlyRevenue * 12, { shouldDirty: true, shouldValidate: true });
+    }
+  };
   return (
     <Card className="shadow-md border-slate-200 transition-all duration-300 hover:shadow-lg">
       <CardHeader>
@@ -70,7 +77,7 @@ export const GeneralInfoSection = React.memo(({ register, control }: SectionProp
                 >
                   <Command className="bg-card text-card-foreground">
                     <CommandInput placeholder="Buscar segmento..." className="h-11" />
-                    <CommandList className="max-h-72 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-200 border-t border-muted/50">
+                    <CommandList className="max-h-72 overflow-y-auto border-t border-muted/50">
                       <CommandEmpty className="py-6 text-center text-sm text-muted-foreground">
                         Nenhum segmento encontrado.
                       </CommandEmpty>
@@ -88,15 +95,15 @@ export const GeneralInfoSection = React.memo(({ register, control }: SectionProp
                                 field.onChange(item);
                                 setOpen(false);
                               }}
-                              className="aria-selected:bg-primary/10 data-[highlighted]:bg-accent cursor-pointer transition-colors py-2 px-3 rounded-md"
+                              className="aria-selected:bg-blue-500 aria-selected:text-white cursor-pointer transition-colors py-2 px-3 rounded-md"
                             >
                               <Check
                                 className={cn(
-                                  "mr-2 h-4 w-4 text-primary",
+                                  "mr-2 h-4 w-4",
                                   field.value === item ? "opacity-100" : "opacity-0"
                                 )}
                               />
-                              <span className="text-foreground font-medium">{item}</span>
+                              <span className="font-medium">{item}</span>
                             </CommandItem>
                           ))}
                         </CommandGroup>
@@ -121,42 +128,53 @@ export const GeneralInfoSection = React.memo(({ register, control }: SectionProp
           <Controller
             control={control}
             name="monthlyRevenue"
-            render={({ field }) => (
+            render={({ field: { ref, onChange, value, ...rest } }) => (
               <NumericFormat
+                {...rest}
+                getInputRef={ref}
+                value={value}
+                onValueChange={(v) => onChange(v.floatValue ?? 0)}
                 thousandSeparator="."
                 decimalSeparator=","
                 prefix="R$ "
                 decimalScale={2}
                 fixedDecimalScale={true}
                 placeholder="R$ 0,00"
-                value={field.value}
-                onValueChange={(values) => field.onChange(values.floatValue ?? 0)}
-                onBlur={field.onBlur}
                 customInput={Input}
-                getInputRef={field.ref}
                 className="bg-slate-50/50"
               />
             )}
           />
         </div>
         <div className="space-y-2">
-          <Label className="font-bold text-slate-700">Faturamento Anual Últ. 12m (R$)</Label>
+          <div className="flex items-center justify-between">
+            <Label className="font-bold text-slate-700">Faturamento Anual (R$)</Label>
+            {monthlyRevenue > 0 && annualRevenue === 0 && (
+              <button 
+                type="button" 
+                onClick={syncAnnualRevenue}
+                className="text-[10px] flex items-center gap-1 text-blue-600 hover:text-blue-700 font-bold uppercase"
+              >
+                <Wand2 className="w-3 h-3" /> Sugerir (12x)
+              </button>
+            )}
+          </div>
           <Controller
             control={control}
             name="annualRevenue"
-            render={({ field }) => (
+            render={({ field: { ref, onChange, value, ...rest } }) => (
               <NumericFormat
+                {...rest}
+                getInputRef={ref}
+                value={value}
+                onValueChange={(v) => onChange(v.floatValue ?? 0)}
                 thousandSeparator="."
                 decimalSeparator=","
                 prefix="R$ "
                 decimalScale={2}
                 fixedDecimalScale={true}
                 placeholder="R$ 0,00"
-                value={field.value}
-                onValueChange={(values) => field.onChange(values.floatValue ?? 0)}
-                onBlur={field.onBlur}
                 customInput={Input}
-                getInputRef={field.ref}
                 className="bg-slate-50/50"
               />
             )}
@@ -254,10 +272,10 @@ export const GeneralInfoSection = React.memo(({ register, control }: SectionProp
         </AnimatePresence>
         <div className="space-y-2 md:col-span-2 pt-2 border-t">
           <Label className="font-bold text-slate-700">Responsável Comercial (Collab)</Label>
-          <Input 
-            {...register('commercialRep')} 
-            placeholder="Seu nome para a assinatura da proposta" 
-            className="bg-blue-50/30 border-blue-100 focus:ring-blue-500 focus:border-blue-500 transition-all" 
+          <Input
+            {...register('commercialRep')}
+            placeholder="Seu nome para a assinatura da proposta"
+            className="bg-blue-50/30 border-blue-100 focus:ring-blue-500 focus:border-blue-500 transition-all"
           />
         </div>
       </CardContent>

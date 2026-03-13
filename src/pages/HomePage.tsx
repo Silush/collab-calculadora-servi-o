@@ -18,10 +18,10 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api-client';
 import { CollabLogo } from '@/components/ui/collab-logo';
 const schema = z.object({
-  companyName: z.string().min(1, "Obrigatório"),
+  companyName: z.string().min(2, "Nome muito curto"),
   segment: z.string().min(1, "Obrigatório"),
-  leadName: z.string(),
-  leadRole: z.string(),
+  leadName: z.string().min(2, "Nome obrigatório"),
+  leadRole: z.string().min(2, "Cargo obrigatório"),
   monthlyRevenue: z.number().min(0),
   annualRevenue: z.number().min(0),
   hasERP: z.enum(["yes", "no"]),
@@ -41,7 +41,7 @@ const schema = z.object({
   needsBudgeting: z.boolean(),
   needsControllership: z.boolean(),
   meetingHours: z.number().min(0),
-  commercialRep: z.string().min(1, "Obrigatório"),
+  commercialRep: z.string().min(2, "Identifique-se para assinar"),
   notes: z.string(),
 });
 const defaultValues: DiagnosticInputs = {
@@ -72,30 +72,34 @@ const defaultValues: DiagnosticInputs = {
   notes: '',
 };
 export function HomePage() {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const queryClient = useQueryClient();
   const [isInitialLoading, setIsInitialLoading] = useState(false);
   const [activeSimulationId, setActiveSimulationId] = useState<string | null>(null);
   const methods = useForm<DiagnosticInputs>({
     resolver: zodResolver(schema),
     defaultValues,
+    mode: 'onChange'
   });
   const { register, control, watch, setValue, reset } = methods;
   const formValues = watch();
   useEffect(() => {
     const shareId = searchParams.get('id');
-    if (shareId) {
+    if (shareId && !activeSimulationId) {
       setIsInitialLoading(true);
       api<SimulationRecord>(`/api/simulations/${shareId}`)
         .then((data) => {
           reset(data.inputs);
           setActiveSimulationId(data.id);
-          toast.success(`Simulação de ${data.inputs.companyName} carregada.`);
+          toast.success(`Diagnóstico de ${data.inputs.companyName} carregado.`);
         })
-        .catch(() => toast.error("Não foi possível carregar a simulação."))
+        .catch(() => {
+          toast.error("Simulação expirada ou inválida.");
+          setSearchParams({});
+        })
         .finally(() => setIsInitialLoading(false));
     }
-  }, [searchParams, reset]);
+  }, [searchParams, reset, activeSimulationId, setSearchParams]);
   const pricingResult = useMemo(() => {
     try {
       return calculatePricing(formValues);
@@ -111,12 +115,14 @@ export function HomePage() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['simulations'] });
       setActiveSimulationId(data.id);
-      toast.success("Simulação salva com sucesso!");
+      setSearchParams({ id: data.id });
+      toast.success("Diagnóstico salvo com sucesso!");
     },
-    onError: (err) => toast.error(`Erro ao salvar: ${err.message}`)
+    onError: (err) => toast.error(`Falha técnica: ${err.message}`)
   });
-  const handleSave = () => {
-    if (!formValues.companyName) return toast.error("Nome da empresa é obrigatório.");
+  const handleSave = async () => {
+    const isValid = await methods.trigger();
+    if (!isValid) return toast.error("Preencha os campos obrigatórios em destaque.");
     const record: SimulationRecord = {
       id: activeSimulationId || crypto.randomUUID(),
       timestamp: Date.now(),
@@ -128,14 +134,14 @@ export function HomePage() {
   const handleReset = () => {
     reset(defaultValues);
     setActiveSimulationId(null);
-    window.history.replaceState({}, '', window.location.pathname);
+    setSearchParams({});
     toast.info("Novo diagnóstico iniciado.");
   };
   return (
     <div className="min-h-screen bg-slate-50/50 dark:bg-background print:bg-white">
       <ThemeToggle />
       <Toaster richColors closeButton position="top-center" />
-      <header className="border-b bg-white/90 backdrop-blur-md dark:bg-card/90 sticky top-0 z-50 print:hidden h-20 flex items-center shadow-sm">
+      <header className="border-b bg-white/95 backdrop-blur-md dark:bg-card/95 sticky top-0 z-50 print:hidden h-20 flex items-center shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full flex items-center justify-between">
           <div className="flex items-center gap-4">
             <CollabLogo size={48} className="glow-lg" />
@@ -150,7 +156,7 @@ export function HomePage() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <HistoryDrawer onLoad={(rec) => { reset(rec.inputs); setActiveSimulationId(rec.id); }} />
+            <HistoryDrawer onLoad={(rec) => { reset(rec.inputs); setActiveSimulationId(rec.id); setSearchParams({ id: rec.id }); }} />
             <Button variant="ghost" size="sm" onClick={handleReset} className="hidden md:flex">
               <RefreshCcw className="w-4 h-4 mr-2" /> Novo
             </Button>
@@ -167,8 +173,9 @@ export function HomePage() {
             <div className="lg:col-span-7 print:hidden">
               {isInitialLoading ? (
                 <div className="space-y-8">
-                  <Skeleton className="h-[200px] w-full" />
-                  <Skeleton className="h-[300px] w-full" />
+                  <Skeleton className="h-[400px] w-full rounded-2xl" />
+                  <Skeleton className="h-[300px] w-full rounded-2xl" />
+                  <Skeleton className="h-[300px] w-full rounded-2xl" />
                 </div>
               ) : (
                 <DiagnosticForm register={register} control={control} setValue={setValue} />
@@ -176,7 +183,7 @@ export function HomePage() {
             </div>
             <div className="lg:col-span-5 relative print:col-span-12">
               {isInitialLoading ? (
-                <Skeleton className="h-[500px] w-full" />
+                <Skeleton className="h-[600px] w-full rounded-2xl shadow-xl" />
               ) : (
                 <ResultsPanel
                   result={pricingResult}

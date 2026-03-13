@@ -14,15 +14,19 @@ export function CollabLogo({ className, size = 40, printSize = 80, glow = true }
   return (
     <div
       className={cn(
-        "relative flex items-center justify-center shrink-0 overflow-hidden rounded-xl bg-black",
-        glow && "shadow-[0_0_20px_rgba(0,255,187,0.4)]",
+        "relative flex items-center justify-center shrink-0 overflow-hidden rounded-xl bg-black border border-white/5",
+        glow && "shadow-[0_0_20px_rgba(0,255,187,0.3)]",
         className
       )}
-      style={cssVars}
+      style={{
+        ...cssVars,
+        width: 'var(--logo-size)',
+        height: 'var(--logo-size)',
+      }}
     >
       <style>{`
         @media print {
-          .collab-logo-container {
+          .collab-logo-container-root {
             width: var(--print-logo-size) !important;
             height: var(--print-logo-size) !important;
             -webkit-print-color-adjust: exact !important;
@@ -45,7 +49,7 @@ export function CollabLogo({ className, size = 40, printSize = 80, glow = true }
         viewBox="0 0 100 100"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
-        className="w-full h-full collab-logo-container p-1"
+        className="w-full h-full collab-logo-container-root p-1.5"
       >
         <defs>
           <filter id="neon-glow" x="-20%" y="-20%" width="140%" height="140%">
