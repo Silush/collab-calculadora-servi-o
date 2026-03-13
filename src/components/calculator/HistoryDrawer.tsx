@@ -5,6 +5,8 @@ import { History, Trash2, ArrowRight } from "lucide-react";
 import { SimulationRecord } from "@shared/types";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { formatCurrency } from "@/lib/utils";
 interface HistoryDrawerProps {
   onLoad: (record: SimulationRecord) => void;
 }
@@ -12,7 +14,13 @@ export function HistoryDrawer({ onLoad }: HistoryDrawerProps) {
   const [history, setHistory] = React.useState<SimulationRecord[]>([]);
   const loadHistory = () => {
     const saved = localStorage.getItem('dealdesk_history');
-    if (saved) setHistory(JSON.parse(saved));
+    if (saved) {
+      try {
+        setHistory(JSON.parse(saved));
+      } catch (e) {
+        console.error("Failed to parse history", e);
+      }
+    }
   };
   const clearHistory = () => {
     localStorage.removeItem('dealdesk_history');
@@ -36,14 +44,16 @@ export function HistoryDrawer({ onLoad }: HistoryDrawerProps) {
         </SheetHeader>
         <div className="space-y-4">
           {history.length === 0 ? (
-            <div className="text-center py-10 text-muted-foreground">Nenhuma simulação salva.</div>
+            <div className="text-center py-10 text-muted-foreground">Nenhuma simulação salva localmente.</div>
           ) : (
             history.map((record) => (
               <div key={record.id} className="p-4 border rounded-xl hover:border-primary/50 transition-colors group">
                 <div className="flex justify-between items-start mb-2">
                   <div>
-                    <h4 className="font-bold text-slate-900">{record.inputs.companyName || "Sem Nome"}</h4>
-                    <p className="text-xs text-muted-foreground">{format(record.timestamp, 'dd/MM/yyyy HH:mm')}</p>
+                    <h4 className="font-bold text-slate-900">{record.inputs.companyName || "Lead sem nome"}</h4>
+                    <p className="text-xs text-muted-foreground">
+                      {format(record.timestamp, "dd 'de' MMMM 'às' HH:mm", { locale: ptBR })}
+                    </p>
                   </div>
                   <Badge variant="outline" className="capitalize">
                     {record.result.recommendedPlan}
@@ -51,7 +61,7 @@ export function HistoryDrawer({ onLoad }: HistoryDrawerProps) {
                 </div>
                 <div className="flex justify-between items-center mt-4">
                   <div className="text-sm font-bold text-primary">
-                    R$ {record.result.totalMonthly.toLocaleString()}
+                    {formatCurrency(record.result.totalMonthly)}
                   </div>
                   <Button size="sm" variant="ghost" onClick={() => onLoad(record)} className="group-hover:bg-primary group-hover:text-white transition-all">
                     Carregar <ArrowRight className="ml-2 w-4 h-4" />

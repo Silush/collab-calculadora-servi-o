@@ -1,4 +1,4 @@
-import React, { useMemo, useEffect } from 'react';
+import React, { useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -15,26 +15,26 @@ import { toast } from 'sonner';
 const schema = z.object({
   companyName: z.string().min(1, "Obrigatório"),
   segment: z.string().optional(),
-  monthlyRevenue: z.number().min(0),
-  annualRevenue: z.number().min(0),
-  hasERP: z.enum(["yes", "no"]),
-  needsOps: z.boolean(),
-  needsStrategic: z.boolean(),
-  manualBankSchedules: z.number(),
-  manualNFSe: z.number(),
-  monthlyBoletos: z.number(),
-  needsDRE: z.boolean(),
-  needsStrategicMeetings: z.boolean(),
-  needsAnalyticalMeetings: z.boolean(),
-  meetingHours: z.number(),
+  monthlyRevenue: z.number().default(0),
+  annualRevenue: z.number().default(0),
+  hasERP: z.enum(["yes", "no"]).default("no"),
+  needsOps: z.boolean().default(true),
+  needsStrategic: z.boolean().default(false),
+  manualBankSchedules: z.number().default(0),
+  manualNFSe: z.number().default(0),
+  monthlyBoletos: z.number().default(0),
+  needsDRE: z.boolean().optional(),
+  needsStrategicMeetings: z.boolean().optional(),
+  needsAnalyticalMeetings: z.boolean().optional(),
+  meetingHours: z.number().default(0),
 }).passthrough();
 const defaultValues: DiagnosticInputs = {
   companyName: '',
   segment: '',
   leadName: '',
   leadRole: '',
-  monthlyRevenue: 100000,
-  annualRevenue: 1200000,
+  monthlyRevenue: 0,
+  annualRevenue: 0,
   hasERP: 'no',
   needsCollabERP: 'no',
   internalFinanceTeam: 'no',
@@ -70,10 +70,11 @@ export function HomePage() {
       inputs: formValues,
       result: pricingResult,
     };
-    const history = JSON.parse(localStorage.getItem('dealdesk_history') || '[]');
+    const historyString = localStorage.getItem('dealdesk_history');
+    const history = historyString ? JSON.parse(historyString) : [];
     const newHistory = [record, ...history].slice(0, 10);
     localStorage.setItem('dealdesk_history', JSON.stringify(newHistory));
-    toast.success("Simulação salva no histórico!");
+    toast.success("Simulação salva no histórico local!");
   };
   const loadSimulation = (record: SimulationRecord) => {
     reset(record.inputs);
@@ -90,7 +91,7 @@ export function HomePage() {
             </div>
             <div>
               <h1 className="text-lg font-black tracking-tight text-slate-900 dark:text-white">Collab DealDesk</h1>
-              <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Diagnostic Engine v3.0</p>
+              <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Calculadora Comercial</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -99,7 +100,7 @@ export function HomePage() {
               <RefreshCcw className="w-4 h-4 mr-2" /> Novo
             </Button>
             <Button variant="default" size="sm" className="hidden sm:flex" onClick={saveSimulation}>
-              <Save className="w-4 h-4 mr-2" /> Salvar
+              <Save className="w-4 h-4 mr-2" /> Salvar Local
             </Button>
           </div>
         </div>
@@ -109,7 +110,7 @@ export function HomePage() {
           <div className="lg:col-span-7">
             <div className="mb-10">
               <h2 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">Diagnóstico Comercial</h2>
-              <p className="text-slate-500 mt-2 font-medium">Configure o perfil operacional e as necessidades estratégicas do lead.</p>
+              <p className="text-slate-500 mt-2 font-medium">Configure as necessidades operacionais e estratégicas para gerar a proposta.</p>
             </div>
             <DiagnosticForm register={register} control={control} setValue={setValue} />
           </div>

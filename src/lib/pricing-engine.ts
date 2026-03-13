@@ -1,17 +1,18 @@
 import { DiagnosticInputs, PricingResult, PlanType } from "@shared/types";
 import { PLANS } from "./plans";
+import { formatCurrency } from "./utils";
 export function calculatePricing(inputs: DiagnosticInputs): PricingResult {
   const {
-    monthlyRevenue,
-    annualRevenue,
-    needsOps,
-    needsStrategic,
-    manualBankSchedules,
-    manualNFSe,
-    monthlyBoletos,
-    meetingHours,
-    needsStrategicMeetings,
-    needsAnalyticalMeetings
+    monthlyRevenue = 0,
+    annualRevenue = 0,
+    needsOps = false,
+    needsStrategic = false,
+    manualBankSchedules = 0,
+    manualNFSe = 0,
+    monthlyBoletos = 0,
+    meetingHours = 0,
+    needsStrategicMeetings = false,
+    needsAnalyticalMeetings = false
   } = inputs;
   // 1. Recommendation Logic
   let recommendedPlan: PlanType = 'essential';
@@ -22,7 +23,7 @@ export function calculatePricing(inputs: DiagnosticInputs): PricingResult {
   } else if (needsOps && monthlyRevenue <= 200000) {
     recommendedPlan = 'essential';
   } else if (needsOps) {
-    recommendedPlan = 'premium'; // If ops needed but revenue high, premium is safer
+    recommendedPlan = 'premium';
   }
   const plan = PLANS[recommendedPlan];
   const breakdown: PricingResult['breakdown'] = [];
@@ -63,7 +64,7 @@ export function calculatePricing(inputs: DiagnosticInputs): PricingResult {
   if (meetingFees > 0) {
     breakdown.push({ label: "Horas de Consultoria", value: meetingFees, type: 'addon' });
   }
-  // 6. Savings Calculation (Premium bundle vs separate)
+  // 6. Savings Calculation
   let savingsVsIndividual: number | undefined;
   if (recommendedPlan === 'premium') {
     const separateCost = PLANS.essential.baseFee + PLANS.business.baseFee;
@@ -73,20 +74,25 @@ export function calculatePricing(inputs: DiagnosticInputs): PricingResult {
   const arguments_list: string[] = [];
   const alerts: string[] = [];
   if (recommendedPlan === 'premium') {
-    arguments_list.push("Visão 360º: Operacional eficiente + Estratégico consultivo.");
-    arguments_list.push("Redução de riscos fiscais e trabalhistas com BPO completo.");
+    arguments_list.push("Visão 360º: Operação eficiente combinada com inteligência estratégica.");
+    arguments_list.push("Redução de riscos fiscais e trabalhistas com BPO financeiro completo.");
     if (savingsVsIndividual && savingsVsIndividual > 0) {
-      arguments_list.push(`Economia de R$ ${savingsVsIndividual.toLocaleString()} ao unificar serviços.`);
+      arguments_list.push(`Economia direta de ${formatCurrency(savingsVsIndividual)} ao unificar os serviços.`);
     }
   } else if (recommendedPlan === 'business') {
-    arguments_list.push("Foco total em inteligência financeira e suporte à decisão.");
+    arguments_list.push("Foco total em inteligência financeira e suporte à tomada de decisão.");
     arguments_list.push("Ideal para empresas que já possuem operação interna madura.");
+  } else {
+    arguments_list.push("Regularização do fluxo de caixa e agendamentos com baixo custo.");
   }
   if (monthlyRevenue > 200000 && recommendedPlan === 'essential') {
-    alerts.push("Faturamento acima do limite do plano Essential. Risco de desenquadramento.");
+    alerts.push("Faturamento mensal acima do limite sugerido para o plano Essential.");
   }
-  if (inputs.hasERP === 'no' && inputs.needsOps) {
-    alerts.push("Sem ERP: Recomenda-se implantação do ERP Collab para automação.");
+  if (inputs.hasERP === 'no' && (inputs.needsOps || inputs.needsCollabERP === 'yes')) {
+    alerts.push("Recomendado: Implantação do ERP Collab para garantir automação e compliance.");
+  }
+  if (manualBankSchedules > 100 || manualNFSe > 100) {
+    alerts.push("Alto volume operacional identificado: Recomenda-se revisão de processos para escalabilidade.");
   }
   const totalMonthly = baseFee + overageFees + revenueSurcharge + meetingFees;
   return {

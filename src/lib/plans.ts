@@ -3,7 +3,7 @@ export const PLANS = {
     name: "Essential BPO",
     baseFee: 1621,
     setupFee: 1800,
-    revenueCap: 200000, // Monthly
+    revenueCap: 200000,
     limits: {
       bankSchedules: 20,
       nfse: 20,
@@ -17,7 +17,7 @@ export const PLANS = {
     baseFee: 4730,
     setupFee: 0,
     annualRevenueMin: 4800000,
-    revenueTierUnit: 1000, // per 1M extra
+    revenueTierUnit: 1000,
     limits: {
       bankSchedules: 0,
       nfse: 0,
@@ -37,15 +37,16 @@ export const PLANS = {
     },
     addonUnit: 10,
     meetingUnit: 300,
-    revenueTierUnit: 800, // per 1M extra
+    revenueTierUnit: 800,
   }
 } as const;
 export const SEGMENTS = [
+  "Comércio/Varejo",
   "E-commerce",
   "Indústria",
   "Serviços",
-  "Varejo",
   "Tecnologia",
   "Saúde",
+  "Educação",
   "Outros"
 ];
