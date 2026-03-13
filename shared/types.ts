@@ -69,4 +69,5 @@ export interface SimulationRecord {
   timestamp: number;
   inputs: DiagnosticInputs;
   result: PricingResult;
+  isPublic?: boolean;
 }

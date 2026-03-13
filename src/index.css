@@ -11,63 +11,43 @@
     --muted-foreground: 215.4 16.3% 46.9%;
     --border: 214.3 31.8% 91.4%;
     --ring: 221.2 83.2% 53.3%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --input: 214.3 31.8% 91.4%;
     --radius: 0.75rem;
   }
   .dark {
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
     --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 47.4% 11.2%;
     --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
     --border: 217.2 32.6% 17.5%;
-    --ring: 224.3 76.3% 48%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --input: 217.2 32.6% 17.5%;
-  }
-  * {
-    @apply border-border;
-  }
-  body {
-    @apply bg-background text-foreground;
-    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
   }
 }
 @media print {
-  .print\:hidden {
-    display: none !important;
-  }
-  header, footer, .sidebar, button, .tabs-list {
-    display: none !important;
+  @page {
+    margin: 1.5cm;
+    size: A4;
   }
   body {
-    background-color: white !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    background: white !important;
     color: black !important;
+  }
+  .print\:hidden,
+  header,
+  footer,
+  button,
+  .tabs-list,
+  .sidebar-trigger,
+  [role="tablist"] {
+    display: none !important;
   }
   .max-w-7xl {
     max-width: 100% !important;
     padding: 0 !important;
     margin: 0 !important;
+  }
+  main {
+    padding: 0 !important;
   }
   .grid {
     display: block !important;
@@ -75,24 +55,28 @@
   .card {
     border: 1px solid #e2e8f0 !important;
     box-shadow: none !important;
-    padding: 0 !important;
-    margin: 0 !important;
     width: 100% !important;
+    margin-bottom: 20px !important;
+  }
+  .break-before-page {
+    page-break-before: always;
+    padding-top: 1cm;
   }
   .text-muted-foreground {
     color: #4b5563 !important;
   }
+  /* Force logos and badges to show */
   .badge {
     border: 1px solid #000 !important;
     color: #000 !important;
-  }
-  @page {
-    margin: 2cm;
+    background: transparent !important;
   }
 }
-@layer components {
-  .btn-gradient {
-    @apply inline-flex items-center justify-center px-4 py-2 text-sm font-medium transition-all duration-200 text-white shadow-lg hover:scale-105 active:scale-95;
-    background: linear-gradient(135deg, #3B82F6 0%, #F97316 100%);
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
   }
 }
