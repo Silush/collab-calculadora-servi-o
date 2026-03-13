@@ -7,7 +7,7 @@ import { CheckCircle2, AlertTriangle, Copy, Printer, Share2 } from 'lucide-react
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
-import { formatCurrency, formatBooleanBR, cn } from '@/lib/utils';
+import { formatCurrency, cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { calculatePricing } from '@/lib/pricing-engine';
@@ -20,9 +20,12 @@ interface ResultsPanelProps {
   commercialRep?: string;
   activeId?: string | null;
 }
-export function ResultsPanel({ result, companyName, commercialRep, activeId }: ResultsPanelProps) {
+export function ResultsPanel({ result, activeId }: ResultsPanelProps) {
   const context = useFormContext<DiagnosticInputs>();
-  const currentInputs = context ? context.watch() : ({} as DiagnosticInputs);
+  // Memoize form inputs to prevent unnecessary re-renders and fix exhaustive-deps lint warning
+  const currentInputs = useMemo(() => {
+    return context ? context.watch() : ({} as DiagnosticInputs);
+  }, [context]);
   const comparison = useMemo(() => {
     if (!currentInputs.companyName && !currentInputs.monthlyRevenue) return [];
     const plans: PlanType[] = ['essential', 'business', 'premium'];

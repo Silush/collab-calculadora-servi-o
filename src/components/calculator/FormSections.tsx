@@ -51,19 +51,35 @@ export const GeneralInfoSection = React.memo(({ register, control }: SectionProp
                     variant="outline"
                     role="combobox"
                     aria-expanded={open}
-                    className="w-full justify-between font-normal text-left"
+                    className={cn(
+                      "w-full justify-between font-normal text-left transition-colors",
+                      !field.value && "text-muted-foreground",
+                      field.value && "border-blue-200 bg-blue-50/10 dark:bg-blue-900/10"
+                    )}
                   >
-                    <span className="truncate">{field.value ? field.value : "Selecione o segmento..."}</span>
+                    <span className="truncate">
+                      {field.value ? `Segmento: ${field.value}` : "Escolha o segmento..."}
+                    </span>
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
-                  <Command>
-                    <CommandInput placeholder="Buscar segmento..." />
-                    <CommandList>
-                      <CommandEmpty>Nenhum segmento encontrado.</CommandEmpty>
+                <PopoverContent 
+                  className="w-[var(--radix-popover-trigger-width)] p-0 bg-background/95 backdrop-blur-md border shadow-2xl z-50 rounded-lg overflow-hidden" 
+                  align="start"
+                  sideOffset={4}
+                >
+                  <Command className="bg-card text-card-foreground">
+                    <CommandInput placeholder="Buscar segmento..." className="h-11" />
+                    <CommandList className="max-h-72 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-200 border-t border-muted/50">
+                      <CommandEmpty className="py-6 text-center text-sm text-muted-foreground">
+                        Nenhum segmento encontrado.
+                      </CommandEmpty>
                       {SEGMENT_GROUPS.map((group) => (
-                        <CommandGroup key={group.label} heading={group.label}>
+                        <CommandGroup 
+                          key={group.label} 
+                          heading={group.label}
+                          className="px-2 text-muted-foreground/80"
+                        >
                           {group.items.map((item) => (
                             <CommandItem
                               key={item}
@@ -72,14 +88,15 @@ export const GeneralInfoSection = React.memo(({ register, control }: SectionProp
                                 field.onChange(item);
                                 setOpen(false);
                               }}
+                              className="aria-selected:bg-primary/10 data-[highlighted]:bg-accent cursor-pointer transition-colors py-2 px-3 rounded-md"
                             >
                               <Check
                                 className={cn(
-                                  "mr-2 h-4 w-4",
+                                  "mr-2 h-4 w-4 text-primary",
                                   field.value === item ? "opacity-100" : "opacity-0"
                                 )}
                               />
-                              {item}
+                              <span className="text-foreground font-medium">{item}</span>
                             </CommandItem>
                           ))}
                         </CommandGroup>
