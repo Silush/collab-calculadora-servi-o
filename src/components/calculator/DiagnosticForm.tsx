@@ -1,31 +1,18 @@
 import React from 'react';
-import { UseFormRegister, Control, UseFormSetValue } from 'react-hook-form';
+import { useFormContext } from 'react-hook-form';
 import { DiagnosticInputs } from '@shared/types';
 import { GeneralInfoSection, OperationalSection, StrategicSection } from './FormSections';
 import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-interface DiagnosticFormProps {
-  register: UseFormRegister<DiagnosticInputs>;
-  control: Control<DiagnosticInputs>;
-  setValue: UseFormSetValue<DiagnosticInputs>;
-}
-export function DiagnosticForm({ register, control, setValue }: DiagnosticFormProps) {
+
+export function DiagnosticForm() {
+  const { register, control, setValue } = useFormContext<DiagnosticInputs>();
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <GeneralInfoSection
-        register={register}
-        control={control}
-        setValue={setValue}
-      />
-      <OperationalSection
-        control={control}
-        setValue={setValue}
-      />
-      <StrategicSection
-        control={control}
-        setValue={setValue}
-      />
+      <GeneralInfoSection />
+      <OperationalSection />
+      <StrategicSection />
       <Card className="shadow-sm border-slate-200">
         <CardContent className="pt-6 space-y-2">
           <Label>Observações Adicionais</Label>

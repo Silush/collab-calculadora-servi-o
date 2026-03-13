@@ -2,7 +2,7 @@ import React, { useMemo, useEffect, useState } from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useSearchParams } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { DiagnosticInputs, SimulationRecord } from '@shared/types';
 import { calculatePricing } from '@/lib/pricing-engine';
 import { DiagnosticForm } from '@/components/calculator/DiagnosticForm';
@@ -25,7 +25,7 @@ const schema = z.object({
   monthlyRevenue: z.number().min(0),
   annualRevenue: z.number().min(0),
   hasERP: z.enum(["yes", "no"]),
-  erpName: z.string(),
+  erpName: z.string().min(1, "ERP obrigatório quando possui"),
   needsCollabERP: z.enum(["yes", "no"]),
   internalFinanceTeam: z.enum(["yes", "no"]),
   internalOpsTeam: z.enum(["yes", "no"]),
@@ -41,7 +41,7 @@ const schema = z.object({
   needsBudgeting: z.boolean(),
   needsControllership: z.boolean(),
   meetingHours: z.number().min(0),
-  commercialRep: z.string().min(2, "Identifique-se para assinar"),
+  commercialRep: z.string().min(2, "Representante obrigatório"),
   notes: z.string(),
 });
 const defaultValues: DiagnosticInputs = {
@@ -52,7 +52,7 @@ const defaultValues: DiagnosticInputs = {
   monthlyRevenue: 0,
   annualRevenue: 0,
   hasERP: 'no',
-  erpName: '',
+  erpName: 'Não especificado',
   needsCollabERP: 'no',
   internalFinanceTeam: 'no',
   internalOpsTeam: 'no',
@@ -68,11 +68,12 @@ const defaultValues: DiagnosticInputs = {
   needsBudgeting: false,
   needsControllership: false,
   meetingHours: 0,
-  commercialRep: '',
+  commercialRep: 'Representante Collab',
   notes: '',
 };
 export function HomePage() {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const location = useLocation();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [isInitialLoading, setIsInitialLoading] = useState(false);
   const [activeSimulationId, setActiveSimulationId] = useState<string | null>(null);
@@ -84,7 +85,7 @@ export function HomePage() {
   const { register, control, watch, setValue, reset } = methods;
   const formValues = watch();
   useEffect(() => {
-    const shareId = searchParams.get('id');
+    const shareId = new URLSearchParams(location.search).get('id');
     if (shareId && !activeSimulationId) {
       setIsInitialLoading(true);
       api<SimulationRecord>(`/api/simulations/${shareId}`)
@@ -95,11 +96,11 @@ export function HomePage() {
         })
         .catch(() => {
           toast.error("Simulação expirada ou inválida.");
-          setSearchParams({});
+          navigate({ search: '' }, { replace: true });
         })
         .finally(() => setIsInitialLoading(false));
     }
-  }, [searchParams, reset, activeSimulationId, setSearchParams]);
+  }, [location.search, reset, activeSimulationId, navigate, toast]);
   const pricingResult = useMemo(() => {
     try {
       return calculatePricing(formValues);
@@ -115,7 +116,7 @@ export function HomePage() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['simulations'] });
       setActiveSimulationId(data.id);
-      setSearchParams({ id: data.id });
+      navigate({ search: `?id=${data.id}` }, { replace: true });
       toast.success("Diagnóstico salvo com sucesso!");
     },
     onError: (err) => toast.error(`Falha técnica: ${err.message}`)
@@ -134,7 +135,7 @@ export function HomePage() {
   const handleReset = () => {
     reset(defaultValues);
     setActiveSimulationId(null);
-    setSearchParams({});
+    navigate({ search: '' }, { replace: true });
     toast.info("Novo diagnóstico iniciado.");
   };
   return (
@@ -156,7 +157,7 @@ export function HomePage() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <HistoryDrawer onLoad={(rec) => { reset(rec.inputs); setActiveSimulationId(rec.id); setSearchParams({ id: rec.id }); }} />
+            <HistoryDrawer onLoad={(rec) => { reset(rec.inputs); setActiveSimulationId(rec.id); navigate({ search: `?id=${rec.id}` }, { replace: true }); toast.success(`Diagnóstico de ${rec.inputs.companyName} carregado.`); }} />
             <Button variant="ghost" size="sm" onClick={handleReset} className="hidden md:flex">
               <RefreshCcw className="w-4 h-4 mr-2" /> Novo
             </Button>
@@ -178,7 +179,7 @@ export function HomePage() {
                   <Skeleton className="h-[300px] w-full rounded-2xl" />
                 </div>
               ) : (
-                <DiagnosticForm register={register} control={control} setValue={setValue} />
+                <DiagnosticForm />
               )}
             </div>
             <div className="lg:col-span-5 relative print:col-span-12">

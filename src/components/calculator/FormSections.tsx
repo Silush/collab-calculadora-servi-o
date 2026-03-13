@@ -1,5 +1,5 @@
 import React from 'react';
-import { UseFormRegister, Control, useWatch, UseFormSetValue, Controller } from 'react-hook-form';
+import { useWatch, Controller, useFormContext, UseFormRegister } from 'react-hook-form';
 import { DiagnosticInputs } from '@shared/types';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -21,15 +21,12 @@ import {
   CommandItem,
 } from '@/components/ui/command';
 import { cn } from '@/lib/utils';
-interface SectionProps {
-  register: UseFormRegister<DiagnosticInputs>;
-  control: Control<DiagnosticInputs>;
-  setValue: UseFormSetValue<DiagnosticInputs>;
-}
-export const GeneralInfoSection = React.memo(({ register, control, setValue }: SectionProps) => {
-  const hasERP = useWatch({ control, name: 'hasERP' });
-  const monthlyRevenue = useWatch({ control, name: 'monthlyRevenue' }) || 0;
-  const annualRevenue = useWatch({ control, name: 'annualRevenue' }) || 0;
+
+export const GeneralInfoSection = React.memo(() => {
+  const { control, setValue, register } = useFormContext<DiagnosticInputs>();
+  const hasERP = useWatch({ name: 'hasERP' });
+  const monthlyRevenue = useWatch({ name: 'monthlyRevenue' }) || 0;
+  const annualRevenue = useWatch({ name: 'annualRevenue' }) || 0;
   const [open, setOpen] = React.useState(false);
   const syncAnnualRevenue = () => {
     if (monthlyRevenue > 0) {
@@ -286,12 +283,11 @@ GeneralInfoSection.displayName = "GeneralInfoSection";
 interface VolumeControlProps {
   label: string;
   name: keyof DiagnosticInputs;
-  control: Control<DiagnosticInputs>;
-  setValue: UseFormSetValue<DiagnosticInputs>;
   suffix: string;
 }
-const VolumeControl = ({ label, name, control, setValue, suffix }: VolumeControlProps) => {
-  const value = useWatch({ control, name: name as any }) as number ?? 0;
+const VolumeControl = ({ label, name, suffix }: VolumeControlProps) => {
+  const { control, setValue } = useFormContext<DiagnosticInputs>();
+  const value = useWatch({ name: name as any }) || 0;
   const updateValue = (newVal: number) => {
     setValue(name as any, Math.max(0, newVal), { shouldDirty: true, shouldTouch: true });
   };
@@ -337,8 +333,9 @@ const VolumeControl = ({ label, name, control, setValue, suffix }: VolumeControl
     </div>
   );
 };
-export const OperationalSection = React.memo(({ control, setValue }: Pick<SectionProps, 'control' | 'setValue'>) => {
-  const needsOps = useWatch({ control, name: 'needsOps' });
+export const OperationalSection = React.memo(() => {
+  const { control, setValue } = useFormContext<DiagnosticInputs>();
+  const needsOps = useWatch({ name: 'needsOps' });
   return (
     <Card className="shadow-md border-slate-200 transition-all duration-300 hover:shadow-lg">
       <CardHeader className="flex flex-row items-center justify-between space-y-0">
@@ -352,22 +349,16 @@ export const OperationalSection = React.memo(({ control, setValue }: Pick<Sectio
         <VolumeControl
           label="Agendamentos Bancários/Mês"
           name="manualBankSchedules"
-          control={control}
-          setValue={setValue}
           suffix="agendamentos"
         />
         <VolumeControl
           label="Emissões de NFSe/Mês"
           name="manualNFSe"
-          control={control}
-          setValue={setValue}
           suffix="notas"
         />
         <VolumeControl
           label="Boletos Gerados/Mês"
           name="monthlyBoletos"
-          control={control}
-          setValue={setValue}
           suffix="boletos"
         />
       </CardContent>
@@ -375,9 +366,10 @@ export const OperationalSection = React.memo(({ control, setValue }: Pick<Sectio
   );
 });
 OperationalSection.displayName = "OperationalSection";
-export const StrategicSection = React.memo(({ control, setValue }: Pick<SectionProps, 'control' | 'setValue'>) => {
-  const needsStrategic = useWatch({ control, name: 'needsStrategic' });
-  const allValues = useWatch({ control });
+export const StrategicSection = React.memo(() => {
+  const { control, setValue } = useFormContext<DiagnosticInputs>();
+  const needsStrategic = useWatch({ name: 'needsStrategic' });
+  const allValues = useWatch();
   const items = [
     { label: "Análise de DRE", name: "needsDRE" },
     { label: "Planejamento Orçamentário", name: "needsBudgeting" },
@@ -435,8 +427,6 @@ export const StrategicSection = React.memo(({ control, setValue }: Pick<SectionP
           <VolumeControl
             label="Horas de Consultoria Adicionais/Mês"
             name="meetingHours"
-            control={control}
-            setValue={setValue}
             suffix="horas"
           />
         </div>

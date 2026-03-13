@@ -29,26 +29,27 @@ const planDisplayNames: Record<PlanType, string> = {
 export function ResultsPanel({ result, activeId }: ResultsPanelProps) {
   const context = useFormContext<DiagnosticInputs>();
   // Use specific fields to reduce unnecessary re-renders
-  const companyName = useWatch({ control: context.control, name: 'companyName' });
-  const leadName = useWatch({ control: context.control, name: 'leadName' });
-  const leadRole = useWatch({ control: context.control, name: 'leadRole' });
-  const annualRevenue = useWatch({ control: context.control, name: 'annualRevenue' });
-  const segment = useWatch({ control: context.control, name: 'segment' });
-  const commercialRep = useWatch({ control: context.control, name: 'commercialRep' });
-  const hasERP = useWatch({ control: context.control, name: 'hasERP' });
-  const erpName = useWatch({ control: context.control, name: 'erpName' });
-  const bankSchedules = useWatch({ control: context.control, name: 'manualBankSchedules' }) || 0;
-  const nfse = useWatch({ control: context.control, name: 'manualNFSe' }) || 0;
-  const boletos = useWatch({ control: context.control, name: 'monthlyBoletos' }) || 0;
+  const companyName = useWatch({ name: 'companyName' });
+  const leadName = useWatch({ name: 'leadName' });
+  const leadRole = useWatch({ name: 'leadRole' });
+  const annualRevenue = useWatch({ name: 'annualRevenue' });
+  const segment = useWatch({ name: 'segment' });
+  const commercialRep = useWatch({ name: 'commercialRep' });
+  const hasERP = useWatch({ name: 'hasERP' });
+  const erpName = useWatch({ name: 'erpName' });
+  const bankSchedules = useWatch({ name: 'manualBankSchedules' }) || 0;
+  const nfse = useWatch({ name: 'manualNFSe' }) || 0;
+  const boletos = useWatch({ name: 'monthlyBoletos' }) || 0;
   const currentInputs = useMemo(() => ({
     companyName, leadName, leadRole, annualRevenue, segment, commercialRep, 
     hasERP, erpName, manualBankSchedules: bankSchedules, manualNFSe: nfse, monthlyBoletos: boletos
   }), [companyName, leadName, leadRole, annualRevenue, segment, commercialRep, hasERP, erpName, bankSchedules, nfse, boletos]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const comparison = useMemo(() => {
     if (!companyName && !annualRevenue) return [];
     const plans: PlanType[] = ['essential', 'business', 'premium'];
     return plans.map(p => calculatePricing(context.getValues(), p));
-  }, [context, companyName, annualRevenue]);
+  }, [companyName, annualRevenue]);
   const shareUrl = activeId ? `${window.location.origin}?id=${activeId}` : null;
   const copyProposal = async () => {
     if (!commercialRep) {
