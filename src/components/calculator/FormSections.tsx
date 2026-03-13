@@ -18,6 +18,7 @@ import {
   CommandGroup,
   CommandInput,
   CommandList,
+  CommandItem,
 } from '@/components/ui/command';
 import { cn } from '@/lib/utils';
 interface SectionProps {
@@ -110,7 +111,6 @@ export const GeneralInfoSection = React.memo(({ register, control }: SectionProp
                 prefix="R$ "
                 decimalScale={2}
                 fixedDecimalScale={false}
-                formatOnBlur={true}
                 allowEmptyFormatting={true}
                 mask="_"
                 placeholder="R$ 0,00"
@@ -133,7 +133,6 @@ export const GeneralInfoSection = React.memo(({ register, control }: SectionProp
                 prefix="R$ "
                 decimalScale={2}
                 fixedDecimalScale={false}
-                formatOnBlur={true}
                 allowEmptyFormatting={true}
                 mask="_"
                 placeholder="R$ 0,00"
