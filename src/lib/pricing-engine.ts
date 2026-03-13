@@ -2,18 +2,16 @@ import { DiagnosticInputs, PricingResult, PlanType } from "@shared/types";
 import { PLANS } from "./plans";
 import { formatCurrency } from "./utils";
 export function calculatePricing(inputs: DiagnosticInputs): PricingResult {
-  const {
-    monthlyRevenue = 0,
-    annualRevenue = 0,
-    needsOps = false,
-    needsStrategic = false,
-    manualBankSchedules = 0,
-    manualNFSe = 0,
-    monthlyBoletos = 0,
-    meetingHours = 0,
-    needsStrategicMeetings = false,
-    needsAnalyticalMeetings = false
-  } = inputs;
+  const monthlyRevenue = Number(inputs.monthlyRevenue) || 0;
+  const annualRevenue = Number(inputs.annualRevenue) || 0;
+  const needsOps = Boolean(inputs.needsOps);
+  const needsStrategic = Boolean(inputs.needsStrategic);
+  const manualBankSchedules = Number(inputs.manualBankSchedules) || 0;
+  const manualNFSe = Number(inputs.manualNFSe) || 0;
+  const monthlyBoletos = Number(inputs.monthlyBoletos) || 0;
+  const meetingHours = Number(inputs.meetingHours) || 0;
+  const needsStrategicMeetings = Boolean(inputs.needsStrategicMeetings);
+  const needsAnalyticalMeetings = Boolean(inputs.needsAnalyticalMeetings);
   // 1. Recommendation Logic
   let recommendedPlan: PlanType = 'essential';
   if (needsOps && needsStrategic) {
@@ -88,7 +86,7 @@ export function calculatePricing(inputs: DiagnosticInputs): PricingResult {
   if (monthlyRevenue > 200000 && recommendedPlan === 'essential') {
     alerts.push("Faturamento mensal acima do limite sugerido para o plano Essential.");
   }
-  if (inputs.hasERP === 'no' && (inputs.needsOps || inputs.needsCollabERP === 'yes')) {
+  if (inputs.hasERP === 'no' && (needsOps || inputs.needsCollabERP === 'yes')) {
     alerts.push("Recomendado: Implantação do ERP Collab para garantir automação e compliance.");
   }
   if (manualBankSchedules > 100 || manualNFSe > 100) {

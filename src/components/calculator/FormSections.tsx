@@ -5,13 +5,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Switch } from '@/components/ui/switch';
-import { Slider } from '@/components/ui/slider';
 import { SEGMENT_GROUPS } from '@/lib/plans';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
-import { Check, ChevronsUpDown } from 'lucide-react';
+import { Check, ChevronsUpDown, Minus, Plus } from 'lucide-react';
 import { NumericFormat } from 'react-number-format';
 import {
   Command,
@@ -99,7 +98,6 @@ export const GeneralInfoSection = React.memo(({ register, control, setValue }: S
             name="monthlyRevenue"
             render={({ field }) => (
               <NumericFormat
-                customInput={Input}
                 thousandSeparator="."
                 decimalSeparator=","
                 prefix="R$ "
@@ -108,6 +106,7 @@ export const GeneralInfoSection = React.memo(({ register, control, setValue }: S
                 placeholder="R$ 0,00"
                 value={field.value}
                 onValueChange={(values) => field.onChange(values.floatValue || 0)}
+                customInput={(props) => <Input {...props} />}
               />
             )}
           />
@@ -119,7 +118,6 @@ export const GeneralInfoSection = React.memo(({ register, control, setValue }: S
             name="annualRevenue"
             render={({ field }) => (
               <NumericFormat
-                customInput={Input}
                 thousandSeparator="."
                 decimalSeparator=","
                 prefix="R$ "
@@ -128,6 +126,7 @@ export const GeneralInfoSection = React.memo(({ register, control, setValue }: S
                 placeholder="R$ 0,00"
                 value={field.value}
                 onValueChange={(values) => field.onChange(values.floatValue || 0)}
+                customInput={(props) => <Input {...props} />}
               />
             )}
           />
@@ -177,10 +176,58 @@ export const GeneralInfoSection = React.memo(({ register, control, setValue }: S
   );
 });
 GeneralInfoSection.displayName = "GeneralInfoSection";
+interface VolumeControlProps {
+  label: string;
+  name: keyof DiagnosticInputs;
+  control: Control<DiagnosticInputs>;
+  setValue: UseFormSetValue<DiagnosticInputs>;
+  suffix: string;
+}
+const VolumeControl = ({ label, name, control, setValue, suffix }: VolumeControlProps) => {
+  const value = useWatch({ control, name: name as any }) as number ?? 0;
+  const updateValue = (newVal: number) => {
+    setValue(name as any, Math.max(0, newVal));
+  };
+  return (
+    <div className="space-y-4 p-4 bg-slate-50/50 rounded-xl border border-slate-100 transition-colors hover:bg-slate-50">
+      <div className="flex justify-between items-center">
+        <Label className="font-semibold text-slate-700">{label}</Label>
+        <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100">
+          {value} {suffix}
+        </span>
+      </div>
+      <div className="flex items-center gap-3">
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          className="h-10 w-10 shrink-0 border-slate-200"
+          onClick={() => updateValue(value - 1)}
+          disabled={value <= 0}
+        >
+          <Minus className="h-4 w-4" />
+        </Button>
+        <Input
+          type="number"
+          className="text-center font-mono font-bold text-lg h-10 border-slate-200 focus-visible:ring-blue-500"
+          value={value}
+          onChange={(e) => updateValue(parseInt(e.target.value) || 0)}
+          min={0}
+        />
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          className="h-10 w-10 shrink-0 border-slate-200"
+          onClick={() => updateValue(value + 1)}
+        >
+          <Plus className="h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+  );
+};
 export const OperationalSection = React.memo(({ control, setValue }: Pick<SectionProps, 'control' | 'setValue'>) => {
-  const bank = useWatch({ control, name: 'manualBankSchedules' }) ?? 0;
-  const nfse = useWatch({ control, name: 'manualNFSe' }) ?? 0;
-  const boletos = useWatch({ control, name: 'monthlyBoletos' }) ?? 0;
   const needsOps = useWatch({ control, name: 'needsOps' });
   return (
     <Card className="shadow-sm border-slate-200">
@@ -191,28 +238,28 @@ export const OperationalSection = React.memo(({ control, setValue }: Pick<Sectio
           <Switch checked={!!needsOps} onCheckedChange={(val) => setValue('needsOps', val)} />
         </div>
       </CardHeader>
-      <CardContent className="space-y-8">
-        <div className="space-y-4">
-          <div className="flex justify-between">
-            <Label>Agendamentos Bancários/Mês</Label>
-            <span className="font-mono font-bold text-blue-600">{bank}</span>
-          </div>
-          <Slider value={[bank]} max={200} step={5} onValueChange={(v) => setValue('manualBankSchedules', v[0])} />
-        </div>
-        <div className="space-y-4">
-          <div className="flex justify-between">
-            <Label>Emissões de NFSe/Mês</Label>
-            <span className="font-mono font-bold text-blue-600">{nfse}</span>
-          </div>
-          <Slider value={[nfse]} max={200} step={5} onValueChange={(v) => setValue('manualNFSe', v[0])} />
-        </div>
-        <div className="space-y-4">
-          <div className="flex justify-between">
-            <Label>Boletos Gerados/Mês</Label>
-            <span className="font-mono font-bold text-blue-600">{boletos}</span>
-          </div>
-          <Slider value={[boletos]} max={200} step={5} onValueChange={(v) => setValue('monthlyBoletos', v[0])} />
-        </div>
+      <CardContent className="space-y-4">
+        <VolumeControl
+          label="Agendamentos Bancários/Mês"
+          name="manualBankSchedules"
+          control={control}
+          setValue={setValue}
+          suffix="agendamentos"
+        />
+        <VolumeControl
+          label="Emissões de NFSe/Mês"
+          name="manualNFSe"
+          control={control}
+          setValue={setValue}
+          suffix="notas"
+        />
+        <VolumeControl
+          label="Boletos Gerados/Mês"
+          name="monthlyBoletos"
+          control={control}
+          setValue={setValue}
+          suffix="boletos"
+        />
       </CardContent>
     </Card>
   );
@@ -237,8 +284,8 @@ export const StrategicSection = React.memo(({ control, setValue }: Pick<SectionP
       </CardHeader>
       <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {items.map(item => (
-          <div key={item.name} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-            <Label className="text-sm">{item.label}</Label>
+          <div key={item.name} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100 hover:border-slate-200 transition-colors">
+            <Label className="text-sm font-medium">{item.label}</Label>
             <Switch
               disabled={!needsStrategic}
               checked={!!(allValues as any)[item.name]}

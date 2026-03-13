@@ -18,8 +18,8 @@ import { CollabLogo } from '@/components/ui/collab-logo';
 const schema = z.object({
   companyName: z.string().min(1, "Obrigatório"),
   segment: z.string().min(1, "Obrigatório"),
-  leadName: z.string().optional().or(z.literal('')),
-  leadRole: z.string().optional().or(z.literal('')),
+  leadName: z.string().default(""),
+  leadRole: z.string().default(""),
   monthlyRevenue: z.number().min(0),
   annualRevenue: z.number().min(0),
   hasERP: z.enum(["yes", "no"]),
@@ -29,18 +29,18 @@ const schema = z.object({
   internalOpsTeam: z.enum(["yes", "no"]),
   needsOps: z.boolean(),
   needsStrategic: z.boolean(),
-  manualBankSchedules: z.number(),
-  manualNFSe: z.number(),
-  monthlyBoletos: z.number(),
+  manualBankSchedules: z.number().min(0),
+  manualNFSe: z.number().min(0),
+  monthlyBoletos: z.number().min(0),
   needsAnalyticalMeetings: z.boolean(),
   needsStrategicMeetings: z.boolean(),
   needsDashboards: z.boolean(),
   needsDRE: z.boolean(),
   needsBudgeting: z.boolean(),
   needsControllership: z.boolean(),
-  meetingHours: z.number(),
-  commercialRep: z.string(),
-  notes: z.string().optional().or(z.literal('')),
+  meetingHours: z.number().min(0),
+  commercialRep: z.string().min(1, "Obrigatório"),
+  notes: z.string().optional().default(""),
 });
 const defaultValues: DiagnosticInputs = {
   companyName: '',
@@ -81,7 +81,6 @@ export function HomePage() {
       return calculatePricing(formValues);
     } catch (e) {
       console.error("Pricing calculation error:", e);
-      // Return a basic structure to prevent UI crash if engine fails
       return calculatePricing(defaultValues);
     }
   }, [formValues]);
