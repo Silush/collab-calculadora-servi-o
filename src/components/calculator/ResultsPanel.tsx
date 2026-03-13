@@ -11,7 +11,7 @@ import { formatCurrency, cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { calculatePricing } from '@/lib/pricing-engine';
-import { useFormContext } from 'react-hook-form';
+import { useFormContext, useWatch } from 'react-hook-form';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 import { CollabLogo } from '@/components/ui/collab-logo';
 interface ResultsPanelProps {
@@ -20,12 +20,18 @@ interface ResultsPanelProps {
   commercialRep?: string;
   activeId?: string | null;
 }
+const planDisplayNames: Record<PlanType, string> = {
+  essential: 'Essential BPO',
+  business: 'Business CFO',
+  premium: 'Premium Finance',
+};
 export function ResultsPanel({ result, activeId }: ResultsPanelProps) {
   const context = useFormContext<DiagnosticInputs>();
-  // Memoize form inputs to prevent unnecessary re-renders and fix exhaustive-deps lint warning
-  const currentInputs = useMemo(() => {
-    return context ? context.watch() : ({} as DiagnosticInputs);
-  }, [context]);
+  // Use useWatch for real-time form state subscription - safest pattern for Results Panel
+  const watchedValues = useWatch({
+    control: context?.control,
+  }) as DiagnosticInputs;
+  const currentInputs = watchedValues || ({} as DiagnosticInputs);
   const comparison = useMemo(() => {
     if (!currentInputs.companyName && !currentInputs.monthlyRevenue) return [];
     const plans: PlanType[] = ['essential', 'business', 'premium'];
@@ -37,6 +43,7 @@ export function ResultsPanel({ result, activeId }: ResultsPanelProps) {
       return toast.warning("Identifique-se como 'Responsável Comercial' antes de gerar a proposta.");
     }
     const today = format(new Date(), "dd/MM/yyyy", { locale: ptBR });
+    const planName = planDisplayNames[result.recommendedPlan];
     const text = `PROPOSTA COMERCIAL - COLLAB DEALDESK
 1. DADOS DO LEAD
 Empresa: ${currentInputs.companyName || 'N/A'}
@@ -47,7 +54,7 @@ ERP: ${currentInputs.hasERP === 'yes' ? currentInputs.erpName : 'Não possui'}
 Agendamentos Bancários: ${currentInputs.manualBankSchedules}/mês
 Emissões NFSe: ${currentInputs.manualNFSe}/mês
 Boletos: ${currentInputs.monthlyBoletos}/mês
-3. JUSTIFICATIVA TÉCNICA (RECOMENDAÇÃO: ${result.recommendedPlan.toUpperCase()})
+3. JUSTIFICATIVA TÉCNICA (RECOMENDAÇÃO: ${planName.toUpperCase()})
 ${result.arguments.map(a => `• ${a}`).join('\n')}
 4. COMPOSIÇÃO DO INVESTIMENTO
 ${result.breakdown.map(item => `- ${item.label}: ${formatCurrency(item.value)}`).join('\n')}
@@ -99,7 +106,7 @@ Link da Simulação: ${shareUrl || 'Disponível apenas após salvar'}`;
         <CardHeader className="pb-2">
           <div className="flex justify-between items-start print:hidden">
             <Badge className="px-3 py-1 text-sm font-bold uppercase tracking-wider bg-primary">
-              Plano {result.recommendedPlan}
+              {planDisplayNames[result.recommendedPlan]}
             </Badge>
           </div>
           <CardTitle className="text-4xl font-black pt-6 flex items-baseline gap-1 print:pt-0">
@@ -128,7 +135,7 @@ Link da Simulação: ${shareUrl || 'Disponível apenas após salvar'}`;
                   <TableBody>
                     {comparison.map((c) => (
                       <TableRow key={c.recommendedPlan} className={cn(c.recommendedPlan === result.recommendedPlan && "bg-slate-200/50")}>
-                        <TableCell className="capitalize text-xs font-bold">{c.recommendedPlan}</TableCell>
+                        <TableCell className="text-xs font-bold">{planDisplayNames[c.recommendedPlan]}</TableCell>
                         <TableCell className="text-right text-xs font-mono">{formatCurrency(c.totalMonthly)}</TableCell>
                       </TableRow>
                     ))}

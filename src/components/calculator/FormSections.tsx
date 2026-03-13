@@ -30,17 +30,17 @@ export const GeneralInfoSection = React.memo(({ register, control }: SectionProp
   const hasERP = useWatch({ control, name: 'hasERP' });
   const [open, setOpen] = React.useState(false);
   return (
-    <Card className="shadow-sm border-slate-200">
+    <Card className="shadow-md border-slate-200 transition-all duration-300 hover:shadow-lg">
       <CardHeader>
-        <CardTitle className="text-lg font-bold">Dados Gerais do Lead</CardTitle>
+        <CardTitle className="text-xl font-black text-slate-800">Dados Gerais do Lead</CardTitle>
       </CardHeader>
-      <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div className="space-y-2">
-          <Label>Nome da Empresa</Label>
-          <Input {...register('companyName')} placeholder="Ex: Collab Tecnologia LTDA" />
+          <Label className="font-bold text-slate-700">Nome da Empresa</Label>
+          <Input {...register('companyName')} placeholder="Ex: Collab Tecnologia LTDA" className="bg-slate-50/50" />
         </div>
         <div className="space-y-2 flex flex-col">
-          <Label className="mb-2">Segmento</Label>
+          <Label className="mb-2 font-bold text-slate-700">Segmento</Label>
           <Controller
             control={control}
             name="segment"
@@ -52,9 +52,9 @@ export const GeneralInfoSection = React.memo(({ register, control }: SectionProp
                     role="combobox"
                     aria-expanded={open}
                     className={cn(
-                      "w-full justify-between font-normal text-left transition-colors",
+                      "w-full justify-between font-normal text-left transition-colors bg-slate-50/50",
                       !field.value && "text-muted-foreground",
-                      field.value && "border-blue-200 bg-blue-50/10 dark:bg-blue-900/10"
+                      field.value && "border-blue-200 bg-blue-50/20 dark:bg-blue-900/10"
                     )}
                   >
                     <span className="truncate">
@@ -63,8 +63,8 @@ export const GeneralInfoSection = React.memo(({ register, control }: SectionProp
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent 
-                  className="w-[var(--radix-popover-trigger-width)] p-0 bg-background/95 backdrop-blur-md border shadow-2xl z-50 rounded-lg overflow-hidden" 
+                <PopoverContent
+                  className="w-[var(--radix-popover-trigger-width)] p-0 bg-background/95 backdrop-blur-md border shadow-2xl z-50 rounded-lg overflow-hidden"
                   align="start"
                   sideOffset={4}
                 >
@@ -75,10 +75,10 @@ export const GeneralInfoSection = React.memo(({ register, control }: SectionProp
                         Nenhum segmento encontrado.
                       </CommandEmpty>
                       {SEGMENT_GROUPS.map((group) => (
-                        <CommandGroup 
-                          key={group.label} 
+                        <CommandGroup
+                          key={group.label}
                           heading={group.label}
-                          className="px-2 text-muted-foreground/80"
+                          className="px-2 text-muted-foreground/80 font-bold"
                         >
                           {group.items.map((item) => (
                             <CommandItem
@@ -109,15 +109,15 @@ export const GeneralInfoSection = React.memo(({ register, control }: SectionProp
           />
         </div>
         <div className="space-y-2">
-          <Label>Nome do Lead</Label>
-          <Input {...register('leadName')} placeholder="Ex: João Silva" />
+          <Label className="font-bold text-slate-700">Nome do Lead</Label>
+          <Input {...register('leadName')} placeholder="Ex: João Silva" className="bg-slate-50/50" />
         </div>
         <div className="space-y-2">
-          <Label>Cargo / Função</Label>
-          <Input {...register('leadRole')} placeholder="Ex: CFO, Diretor Financeiro" />
+          <Label className="font-bold text-slate-700">Cargo / Função</Label>
+          <Input {...register('leadRole')} placeholder="Ex: CFO, Diretor Financeiro" className="bg-slate-50/50" />
         </div>
         <div className="space-y-2">
-          <Label>Faturamento Mensal (R$)</Label>
+          <Label className="font-bold text-slate-700">Faturamento Mensal (R$)</Label>
           <Controller
             control={control}
             name="monthlyRevenue"
@@ -133,12 +133,13 @@ export const GeneralInfoSection = React.memo(({ register, control }: SectionProp
                 onValueChange={(values) => field.onChange(values.floatValue ?? 0)}
                 customInput={Input}
                 getInputRef={field.ref}
+                className="bg-slate-50/50"
               />
             )}
           />
         </div>
         <div className="space-y-2">
-          <Label>Faturamento Anual Últ. 12m (R$)</Label>
+          <Label className="font-bold text-slate-700">Faturamento Anual Últ. 12m (R$)</Label>
           <Controller
             control={control}
             name="annualRevenue"
@@ -154,12 +155,13 @@ export const GeneralInfoSection = React.memo(({ register, control }: SectionProp
                 onValueChange={(values) => field.onChange(values.floatValue ?? 0)}
                 customInput={Input}
                 getInputRef={field.ref}
+                className="bg-slate-50/50"
               />
             )}
           />
         </div>
         <div className="space-y-3">
-          <Label>Já possui ERP?</Label>
+          <Label className="font-bold text-slate-700">Já possui ERP?</Label>
           <Controller
             control={control}
             name="hasERP"
@@ -182,7 +184,7 @@ export const GeneralInfoSection = React.memo(({ register, control }: SectionProp
           />
         </div>
         <div className="space-y-3">
-          <Label>Possui equipe de operação própria?</Label>
+          <Label className="font-bold text-slate-700">Possui equipe de operação própria?</Label>
           <Controller
             control={control}
             name="internalOpsTeam"
@@ -213,8 +215,8 @@ export const GeneralInfoSection = React.memo(({ register, control }: SectionProp
               exit={{ opacity: 0, height: 0 }}
               className="space-y-2 overflow-hidden md:col-span-2"
             >
-              <Label>Nome do ERP Atual</Label>
-              <Input {...register('erpName')} placeholder="Ex: SAP, Totvs, Omie..." />
+              <Label className="font-bold text-slate-700">Nome do ERP Atual</Label>
+              <Input {...register('erpName')} placeholder="Ex: SAP, Totvs, Omie..." className="bg-slate-50/50" />
             </motion.div>
           ) : (
             <motion.div
@@ -224,7 +226,7 @@ export const GeneralInfoSection = React.memo(({ register, control }: SectionProp
               exit={{ opacity: 0, height: 0 }}
               className="space-y-3 overflow-hidden md:col-span-2"
             >
-              <Label>Deseja implantar o ERP parceiro Collab?</Label>
+              <Label className="font-bold text-slate-700">Deseja implantar o ERP parceiro Collab?</Label>
               <Controller
                 control={control}
                 name="needsCollabERP"
@@ -248,9 +250,9 @@ export const GeneralInfoSection = React.memo(({ register, control }: SectionProp
             </motion.div>
           )}
         </AnimatePresence>
-        <div className="space-y-2 md:col-span-2">
-          <Label>Responsável Comercial (Collab)</Label>
-          <Input {...register('commercialRep')} placeholder="Seu nome para a assinatura da proposta" />
+        <div className="space-y-2 md:col-span-2 pt-2 border-t">
+          <Label className="font-bold text-slate-700">Responsável Comercial (Collab)</Label>
+          <Input {...register('commercialRep')} placeholder="Seu nome para a assinatura da proposta" className="bg-blue-50/30 border-blue-100" />
         </div>
       </CardContent>
     </Card>
@@ -270,19 +272,19 @@ const VolumeControl = ({ label, name, control, setValue, suffix }: VolumeControl
     setValue(name as any, Math.max(0, newVal));
   };
   return (
-    <div className="space-y-4 p-4 bg-slate-50/50 rounded-xl border border-slate-100 transition-colors hover:bg-slate-50">
+    <div className="space-y-4 p-5 bg-slate-50/80 rounded-2xl border border-slate-200/60 transition-all hover:bg-slate-100/50">
       <div className="flex justify-between items-center">
-        <Label className="font-semibold text-slate-700">{label}</Label>
-        <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100">
+        <Label className="font-bold text-slate-800 text-sm">{label}</Label>
+        <span className="text-[10px] font-black tracking-wider uppercase text-blue-600 bg-blue-100/50 px-2.5 py-1 rounded-full border border-blue-200">
           {value} {suffix}
         </span>
       </div>
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-4">
         <Button
           type="button"
           variant="outline"
           size="icon"
-          className="h-10 w-10 shrink-0 border-slate-200"
+          className="h-11 w-11 shrink-0 border-slate-300 shadow-sm bg-white"
           onClick={() => updateValue(value - 1)}
           disabled={value <= 0}
         >
@@ -290,7 +292,7 @@ const VolumeControl = ({ label, name, control, setValue, suffix }: VolumeControl
         </Button>
         <Input
           type="number"
-          className="text-center font-mono font-bold text-lg h-10 border-slate-200 focus-visible:ring-blue-500"
+          className="text-center font-mono font-black text-xl h-11 border-slate-300 focus-visible:ring-blue-500 bg-white"
           value={value}
           onChange={(e) => updateValue(parseInt(e.target.value) || 0)}
           min={0}
@@ -299,7 +301,7 @@ const VolumeControl = ({ label, name, control, setValue, suffix }: VolumeControl
           type="button"
           variant="outline"
           size="icon"
-          className="h-10 w-10 shrink-0 border-slate-200"
+          className="h-11 w-11 shrink-0 border-slate-300 shadow-sm bg-white"
           onClick={() => updateValue(value + 1)}
         >
           <Plus className="h-4 w-4" />
@@ -311,15 +313,15 @@ const VolumeControl = ({ label, name, control, setValue, suffix }: VolumeControl
 export const OperationalSection = React.memo(({ control, setValue }: Pick<SectionProps, 'control' | 'setValue'>) => {
   const needsOps = useWatch({ control, name: 'needsOps' });
   return (
-    <Card className="shadow-sm border-slate-200">
+    <Card className="shadow-md border-slate-200 transition-all duration-300 hover:shadow-lg">
       <CardHeader className="flex flex-row items-center justify-between space-y-0">
-        <CardTitle className="text-lg font-bold">Volume Operacional</CardTitle>
+        <CardTitle className="text-xl font-black text-slate-800">Volume Operacional</CardTitle>
         <div className="flex items-center space-x-2">
-          <Label className="text-xs text-muted-foreground">Necessita BPO?</Label>
+          <Label className="text-xs font-bold text-muted-foreground uppercase tracking-tight">Ativar BPO?</Label>
           <Switch checked={!!needsOps} onCheckedChange={(val) => setValue('needsOps', val)} />
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-6 pt-4">
         <VolumeControl
           label="Agendamentos Bancários/Mês"
           name="manualBankSchedules"
@@ -358,16 +360,19 @@ export const StrategicSection = React.memo(({ control, setValue }: Pick<SectionP
     { label: "Reuniões Analíticas", name: "needsAnalyticalMeetings" },
   ];
   return (
-    <Card className="shadow-sm border-slate-200">
+    <Card className="shadow-md border-slate-200 transition-all duration-300 hover:shadow-lg">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-        <CardTitle className="text-lg font-bold">Necessidades Consultivas</CardTitle>
-        <Switch checked={!!needsStrategic} onCheckedChange={(val) => setValue('needsStrategic', val)} />
+        <CardTitle className="text-xl font-black text-slate-800">Necessidades Consultivas</CardTitle>
+        <div className="flex items-center space-x-2">
+          <Label className="text-xs font-bold text-muted-foreground uppercase tracking-tight">Ativar CFO?</Label>
+          <Switch checked={!!needsStrategic} onCheckedChange={(val) => setValue('needsStrategic', val)} />
+        </div>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {items.map(item => (
-            <div key={item.name} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100 hover:border-slate-200 transition-colors">
-              <Label className="text-sm font-medium">{item.label}</Label>
+            <div key={item.name} className="flex items-center justify-between p-4 bg-slate-50/50 rounded-2xl border border-slate-200/60 hover:border-blue-200 transition-colors">
+              <Label className="text-sm font-bold text-slate-700">{item.label}</Label>
               <Switch
                 disabled={!needsStrategic}
                 checked={!!(allValues as any)[item.name]}
@@ -377,8 +382,8 @@ export const StrategicSection = React.memo(({ control, setValue }: Pick<SectionP
           ))}
         </div>
         <div className="border-t pt-6 space-y-6">
-          <div className="flex items-center justify-between">
-            <Label className="text-sm font-bold">Equipe Financeira Interna?</Label>
+          <div className="flex items-center justify-between bg-blue-50/20 p-4 rounded-2xl border border-blue-100/50">
+            <Label className="text-sm font-black text-slate-800">Equipe Financeira Interna?</Label>
             <Controller
               control={control}
               name="internalFinanceTeam"

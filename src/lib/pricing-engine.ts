@@ -2,8 +2,24 @@ import { DiagnosticInputs, PricingResult, PlanType } from "@shared/types";
 import { PLANS } from "./plans";
 import { formatCurrency } from "./utils";
 export function calculatePricing(inputs: DiagnosticInputs, forcePlan?: PlanType): PricingResult {
-  // Safety fallback for partial/empty data
-  if (!inputs) return calculatePricing({} as DiagnosticInputs, forcePlan);
+  // Safety fallback for partial/empty data to prevent UI crashes
+  if (!inputs || Object.keys(inputs).length === 0) {
+    const defaultPlan = forcePlan || 'essential';
+    const p = PLANS[defaultPlan];
+    return {
+      recommendedPlan: defaultPlan,
+      baseFee: p.baseFee,
+      setupFee: p.setupFee,
+      overageFees: 0,
+      revenueSurcharge: 0,
+      meetingFees: 0,
+      totalMonthly: p.baseFee,
+      totalInitial: p.baseFee + p.setupFee,
+      arguments: ["Inicie o preenchimento para ver os argumentos."],
+      alerts: [],
+      breakdown: [{ label: "Plano Base", value: p.baseFee, type: 'base' }]
+    };
+  }
   const monthlyRevenue = Number(inputs.monthlyRevenue) || 0;
   const annualRevenue = Number(inputs.annualRevenue) || 0;
   const needsOps = Boolean(inputs.needsOps);
@@ -56,8 +72,10 @@ export function calculatePricing(inputs: DiagnosticInputs, forcePlan?: PlanType)
   if (recommendedPlan === 'business' || recommendedPlan === 'premium') {
     const p = plan as typeof PLANS.business | typeof PLANS.premium;
     // Tiers calculated for every 1M above 4.8M
+    // Fixed threshold logic: if revenue is exactly 4.8M, excess is 0. 
+    // If it's 4.800.001, Math.ceil(1 / 1M) = 1.
     const excessRevenue = Math.max(0, annualRevenue - 4800000);
-    const tiers = Math.ceil(excessRevenue / 1000000);
+    const tiers = excessRevenue > 0 ? Math.ceil(excessRevenue / 1000000) : 0;
     revenueSurcharge = tiers * p.revenueTierUnit;
     if (revenueSurcharge > 0) {
       breakdown.push({ label: `Adicional Faturamento (+${tiers}M)`, value: revenueSurcharge, type: 'addon' });
