@@ -21,79 +21,87 @@
     --border: 217.2 32.6% 17.5%;
   }
 }
-.print-only {
-  display: none !important;
-}
 @media print {
   @page {
-    margin: 1.5cm;
-    size: A4;
+    size: A4 portrait;
+    margin: 1cm;
   }
   body {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
     background: white !important;
     color: black !important;
-    font-size: 11pt;
+    font-size: 10px !important;
+    line-height: 1.3 !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
-  .print-only {
+  /* Force single page density */
+  .print-card {
+    font-size: 10px !important;
+    line-height: 1.3 !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+  /* Compact Sections */
+  section {
+    page-break-inside: avoid !important;
+    margin-bottom: 12pt !important;
+    padding: 0 !important;
+  }
+  /* Table Precision */
+  table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    font-size: 9px !important;
+  }
+  th, td {
+    padding: 2px 4px !important;
+    line-height: 1.2 !important;
+  }
+  /* Layout Resets */
+  .max-w-7xl, main, .grid {
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
     display: block !important;
   }
-  /* Hide UI noise */
+  /* Hidden UI Elements */
   .print\:hidden,
   header,
   nav,
   aside,
   button,
   .tabs-list,
-  .sidebar-trigger,
   [role="tablist"],
   .sonner-toast,
-  .theme-toggle {
+  .theme-toggle,
+  .sidebar-trigger {
     display: none !important;
   }
-  /* Reset layout for print */
-  .max-w-7xl {
-    max-width: 100% !important;
-    padding: 0 !important;
-    margin: 0 !important;
-  }
-  main {
-    padding: 0 !important;
-    margin: 0 !important;
-  }
-  .grid {
+  /* Utility for print-only blocks */
+  .print-only {
     display: block !important;
   }
-  .card {
-    border: none !important;
-    box-shadow: none !important;
+  /* Fixed Signature and Footer */
+  .print-footer {
+    position: fixed !important;
+    bottom: 0 !important;
     width: 100% !important;
-    margin: 0 !important;
-    padding: 0 !important;
     background: white !important;
-    page-break-inside: avoid;
   }
-  /* SVG Color Retention */
-  svg, circle, path {
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-  }
-  /* Break avoidance for clean sections */
-  section {
-    page-break-inside: avoid !important;
-  }
+  /* Typography tweaks */
   h1, h2, h3, h4 {
     color: #0f172a !important;
     font-weight: 900 !important;
+    margin-top: 0 !important;
+    margin-bottom: 4pt !important;
   }
   .text-muted-foreground {
     color: #64748b !important;
-  }
-  /* Ensure the custom print footer stays at bottom */
-  .fixed.bottom-0 {
-    position: fixed !important;
-    bottom: 0 !important;
   }
 }
 @layer base {

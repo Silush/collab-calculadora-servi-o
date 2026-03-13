@@ -16,8 +16,6 @@ import { useWatch } from 'react-hook-form';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 interface ResultsPanelProps {
   result: PricingResult;
-  companyName: string;
-  commercialRep?: string;
   activeId?: string | null;
 }
 const planDisplayNames: Record<PlanType, string> = {
@@ -38,7 +36,6 @@ export function ResultsPanel({ result, activeId }: ResultsPanelProps) {
   const bankSchedules = formValues.manualBankSchedules || 0;
   const nfse = formValues.manualNFSe || 0;
   const boletos = formValues.monthlyBoletos || 0;
-  // Comparison table now reacts to EVERY form change because it watches 'formValues'
   const comparison = useMemo(() => {
     if (!companyName && !annualRevenue) return [];
     const plans: PlanType[] = ['essential', 'business', 'premium'];
@@ -89,20 +86,21 @@ Collab Gestão Empresarial | ${today}`;
   };
   const currentYear = new Date().getFullYear();
   return (
-    <div className="lg:sticky lg:top-24 space-y-6 print:static print:top-0">
+    <div className="lg:sticky lg:top-24 space-y-6 print:static print:top-0 print:m-0 print:p-0">
       <Card className={cn(
-        "overflow-hidden border-2 shadow-xl transition-all duration-500 print:shadow-none print:border-slate-200 print:w-full print:bg-white",
+        "overflow-hidden border-2 shadow-xl transition-all duration-500 print:shadow-none print:border-none print:w-full print:bg-white print:m-0 print:p-0 print-card",
         planStyles[result.recommendedPlan]
       )}>
-        <div className="hidden print:flex justify-between items-center border-b-2 border-slate-900 pb-8 mb-10">
+        {/* PRINT HEADER - Fixed top in A4 */}
+        <div className="hidden print:flex justify-between items-end border-b-2 border-slate-900 pb-4 mb-8">
           <div>
-            <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tighter">COLLAB GESTÃO EMPRESARIAL</h2>
-            <p className="text-[12px] text-slate-500 uppercase font-bold tracking-[0.4em]">Relatório de Diagnóstico Comercial</p>
+            <h2 className="text-xl font-black text-slate-900 uppercase tracking-tighter leading-none">COLLAB GESTÃO EMPRESARIAL</h2>
+            <p className="text-[9px] text-slate-500 uppercase font-bold tracking-[0.3em] mt-1">Diagnóstico Comercial e Estratégico</p>
           </div>
           <div className="text-right">
-            <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Data de Emissão</div>
-            <div className="text-sm font-bold text-slate-900">
-              {format(new Date(), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+            <div className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Emissão</div>
+            <div className="text-[10px] font-bold text-slate-900">
+              {format(new Date(), "dd/MM/yyyy", { locale: ptBR })}
             </div>
           </div>
         </div>
@@ -111,19 +109,21 @@ Collab Gestão Empresarial | ${today}`;
             Recomendação de Máxima Eficiência
           </div>
         )}
-        <CardHeader className="pb-2">
+        <CardHeader className="pb-2 print:p-0 print:mb-6">
           <div className="flex justify-between items-start print:hidden">
             <Badge className="px-3 py-1 text-sm font-bold uppercase tracking-wider bg-primary">
               {planDisplayNames[result.recommendedPlan]}
             </Badge>
           </div>
-          <CardTitle className="text-4xl font-black pt-6 flex items-baseline gap-1 print:pt-0 print:text-slate-900">
+          <CardTitle className="text-4xl font-black pt-6 flex items-baseline gap-1 print:pt-0 print:text-2xl print:text-slate-900">
             {formatCurrency(result.totalMonthly)}
-            <span className="text-sm font-medium text-muted-foreground">/mês</span>
+            <span className="text-sm font-medium text-muted-foreground print:text-xs">/mês</span>
           </CardTitle>
-          <p className="text-xs text-muted-foreground font-medium">Total do 1º Mês (Incluso Setup): {formatCurrency(result.totalInitial)}</p>
+          <p className="text-xs text-muted-foreground font-medium print:text-[10px]">
+            Investimento no 1º Mês (Incluso Setup): {formatCurrency(result.totalInitial)}
+          </p>
         </CardHeader>
-        <CardContent className="pt-4 min-h-[300px]">
+        <CardContent className="pt-4 min-h-[300px] print:p-0 print:min-h-0">
           <Tabs defaultValue="breakdown" className="w-full print:hidden">
             <TabsList className="grid w-full grid-cols-3 mb-4">
               <TabsTrigger value="breakdown">Detalhamento</TabsTrigger>
@@ -159,52 +159,57 @@ Collab Gestão Empresarial | ${today}`;
                 ))}
             </TabsContent>
           </Tabs>
-          <div className="hidden print:block space-y-12">
-            <section className="space-y-4">
-              <h3 className="text-sm font-black uppercase text-slate-900 tracking-widest border-b-2 border-slate-100 pb-2">I. Parâmetros de Diagnóstico</h3>
-              <div className="grid grid-cols-2 gap-x-16 gap-y-4 text-[12px]">
-                <div><span className="text-slate-400 font-bold uppercase text-[10px] block">Empresa</span> <span className="font-bold text-slate-900">{companyName || 'N/A'}</span></div>
-                <div><span className="text-slate-400 font-bold uppercase text-[10px] block">Segmento</span> <span className="font-bold text-slate-900">{segment || 'N/A'}</span></div>
-                <div><span className="text-slate-400 font-bold uppercase text-[10px] block">Faturamento Anual</span> <span className="font-bold text-slate-900">{formatCurrency(annualRevenue)}</span></div>
-                <div><span className="text-slate-400 font-bold uppercase text-[10px] block">ERP Atual</span> <span className="font-bold text-slate-900">{hasERP === 'yes' ? erpName : 'Nenhum'}</span></div>
-                <div className="col-span-2"><span className="text-slate-400 font-bold uppercase text-[10px] block">Volumetria Operacional</span> <span className="font-bold text-slate-900">{bankSchedules} agendamentos | {nfse} emissões NFSe | {boletos} boletos</span></div>
+          {/* PRINT ONLY CONTENT - Dense A4 Layout */}
+          <div className="hidden print:block space-y-8">
+            <section className="space-y-3">
+              <h3 className="text-[11px] font-black uppercase text-slate-900 tracking-widest border-b border-slate-200 pb-1">I. Parâmetros de Diagnóstico</h3>
+              <div className="grid grid-cols-3 gap-4 text-[10px]">
+                <div><span className="text-slate-400 font-bold uppercase text-[8px] block">Empresa</span> <span className="font-bold text-slate-900">{companyName || 'N/A'}</span></div>
+                <div><span className="text-slate-400 font-bold uppercase text-[8px] block">Faturamento Anual</span> <span className="font-bold text-slate-900">{formatCurrency(annualRevenue)}</span></div>
+                <div><span className="text-slate-400 font-bold uppercase text-[8px] block">ERP Atual</span> <span className="font-bold text-slate-900">{hasERP === 'yes' ? erpName : 'Nenhum'}</span></div>
+                <div className="col-span-3"><span className="text-slate-400 font-bold uppercase text-[8px] block">Volumetria Estimada</span> <span className="font-bold text-slate-900">{bankSchedules} agendamentos | {nfse} NFSe | {boletos} boletos</span></div>
               </div>
             </section>
-            <section className="space-y-4">
-              <h3 className="text-sm font-black uppercase text-slate-900 tracking-widest border-b-2 border-slate-100 pb-2">II. Justificativa Estratégica</h3>
-              <div className="space-y-3">
+            <section className="space-y-3">
+              <h3 className="text-[11px] font-black uppercase text-slate-900 tracking-widest border-b border-slate-200 pb-1">II. Justificativa Técnica</h3>
+              <div className="space-y-2">
                 {result.arguments.map((arg, i) => (
-                  <div key={i} className="flex gap-4 text-[12px] leading-relaxed">
+                  <div key={i} className="flex gap-3 text-[10px] leading-tight">
                     <span className="text-blue-600 font-black">•</span>
                     <span className="text-slate-700">{arg}</span>
                   </div>
                 ))}
               </div>
             </section>
-            <section className="space-y-4">
-              <h3 className="text-sm font-black uppercase text-slate-900 tracking-widest border-b-2 border-slate-100 pb-2">III. Proposta de Investimento</h3>
-              <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
-                {result.breakdown.map((item, i) => (
-                  <div key={i} className="flex justify-between text-[12px] py-2.5 border-b border-slate-200/50 last:border-0">
-                    <span className="text-slate-600 font-medium">{item.label}</span>
-                    <span className="font-mono font-bold text-slate-900">{formatCurrency(item.value)}</span>
-                  </div>
-                ))}
-                <div className="flex justify-between pt-6 mt-4 text-lg font-black text-blue-800">
-                  <span className="uppercase tracking-tight">Investimento Mensal Total</span>
-                  <span>{formatCurrency(result.totalMonthly)}</span>
-                </div>
+            <section className="space-y-3">
+              <h3 className="text-[11px] font-black uppercase text-slate-900 tracking-widest border-b border-slate-200 pb-1">III. Plano de Investimento: {planDisplayNames[result.recommendedPlan]}</h3>
+              <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                <Table className="print:text-[9px]">
+                  <TableBody>
+                    {result.breakdown.map((item, i) => (
+                      <TableRow key={i} className="border-b border-slate-200/40 last:border-0 h-auto">
+                        <TableCell className="py-1 font-medium text-slate-600">{item.label}</TableCell>
+                        <TableCell className="py-1 text-right font-mono font-bold text-slate-900">{formatCurrency(item.value)}</TableCell>
+                      </TableRow>
+                    ))}
+                    <TableRow className="border-t-2 border-slate-900">
+                      <TableCell className="py-2 text-[11px] font-black text-blue-900 uppercase">Mensalidade Total</TableCell>
+                      <TableCell className="py-2 text-right text-[11px] font-black text-blue-900">{formatCurrency(result.totalMonthly)}</TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
               </div>
             </section>
-            <div className="pt-24 flex justify-between items-end">
-              <div className="text-[10px] text-slate-400 max-w-[300px]">
-                Este documento é uma simulação comercial exclusiva. Os valores podem sofrer alterações após a validação técnica definitiva do ambiente ERP do cliente.
+            {/* PRINT FOOTER - Signature and Legal */}
+            <div className="pt-12 flex justify-between items-end print-footer">
+              <div className="text-[8px] text-slate-400 max-w-[280px] italic">
+                Simulação baseada em dados declaratórios. Valores sujeitos a revisão após auditoria técnica de processos e ambiente ERP.
               </div>
-              <div className="w-72 text-center">
-                <div className="border-t-2 border-slate-900 pt-4 font-black text-sm text-slate-900 uppercase">
+              <div className="w-56 text-center">
+                <div className="border-t border-slate-900 pt-2 font-black text-[10px] text-slate-900 uppercase">
                   {commercialRep || 'Consultor Collab'}
                 </div>
-                <div className="text-[10px] text-slate-500 uppercase tracking-[0.3em] mt-2">
+                <div className="text-[8px] text-slate-500 uppercase tracking-[0.2em] mt-1">
                   Responsável Comercial
                 </div>
               </div>
@@ -232,16 +237,13 @@ Collab Gestão Empresarial | ${today}`;
               <Share2 className="mr-2 w-4 h-4" /> Link Direto
             </Button>
             <Button variant="outline" size="sm" onClick={() => window.print()}>
-              <Printer className="mr-2 w-4 h-4" /> Gerar PDF
+              <Printer className="mr-2 w-4 h-4" /> Gerar PDF (1 Página)
             </Button>
           </div>
         </CardFooter>
-        <div className="hidden print:flex fixed bottom-0 left-0 right-0 justify-between items-center text-[9px] text-slate-400 border-t border-slate-100 pt-4 bg-white">
-          <div className="flex items-center gap-3">
-            <span className="font-black text-slate-900 tracking-tighter uppercase">COLLAB</span>
-            <span className="font-bold">© {currentYear}</span>
-          </div>
-          <div>Simulação gerada via DealDesk Engine - Tecnologia para Decisão.</div>
+        {/* PAGE NUMBERING FOR PDF */}
+        <div className="hidden print:flex fixed bottom-0 left-0 right-0 justify-between items-center text-[7px] text-slate-300 border-t border-slate-100 pt-2 bg-white">
+          <div>© {currentYear} Collab Gestão Empresarial</div>
           <div className="font-mono">Página 1 de 1</div>
         </div>
       </Card>
