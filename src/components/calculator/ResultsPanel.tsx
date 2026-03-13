@@ -1,102 +1,98 @@
 import React from 'react';
-import { PricingResult } from '@/lib/pricing-engine';
+import { PricingResult } from '@shared/types';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle2, AlertTriangle, ArrowUpRight, Copy } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { CheckCircle2, AlertTriangle, Copy, Zap, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
+import { toast } from 'sonner';
 interface ResultsPanelProps {
   result: PricingResult;
+  companyName: string;
 }
-export function ResultsPanel({ result }: ResultsPanelProps) {
-  const planColors = {
-    essential: 'bg-slate-100 text-slate-800 border-slate-200',
-    business: 'bg-blue-100 text-blue-800 border-blue-200',
-    premium: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+export function ResultsPanel({ result, companyName }: ResultsPanelProps) {
+  const copyProposal = () => {
+    const text = `PROPOSTA COMERCIAL - COLLAB DEALDESK\nCliente: ${companyName}\nPlano Recomendado: ${result.recommendedPlan.toUpperCase()}\n\nInvestimento Mensal: R$ ${result.totalMonthly.toLocaleString()}\nTaxa Implantação: R$ ${result.setupFee.toLocaleString()}\n\nBenefícios Chave:\n${result.arguments.map(a => `- ${a}`).join('\n')}`;
+    navigator.clipboard.writeText(text);
+    toast.success("Proposta copiada para o clipboard!");
   };
-  const planNames = {
-    essential: 'Essential BPO',
-    business: 'Business CFO',
-    premium: 'Premium Finance',
+  const planStyles = {
+    essential: 'border-slate-300 ring-slate-400/20 bg-slate-50',
+    business: 'border-blue-300 ring-blue-400/20 bg-blue-50/30',
+    premium: 'border-emerald-500 ring-emerald-400/30 bg-emerald-50/50',
   };
   return (
-    <div className="sticky top-8 space-y-6">
-      <Card className="overflow-hidden border-2 shadow-2xl">
-        <div className={`h-2 w-full ${result.recommendedPlan === 'premium' ? 'bg-emerald-500' : result.recommendedPlan === 'business' ? 'bg-blue-500' : 'bg-slate-500'}`} />
+    <div className="sticky top-24 space-y-6">
+      <Card className={`overflow-hidden border-2 shadow-xl transition-all duration-500 ${planStyles[result.recommendedPlan]}`}>
+        {result.recommendedPlan === 'premium' && (
+          <div className="bg-emerald-600 text-white text-[10px] font-bold py-1 text-center uppercase tracking-widest animate-pulse">
+            Melhor Custo-Benefício Identificado
+          </div>
+        )}
         <CardHeader className="pb-2">
           <div className="flex justify-between items-start">
-            <Badge variant="outline" className={`capitalize px-3 py-1 text-sm font-semibold ${planColors[result.recommendedPlan]}`}>
-              {planNames[result.recommendedPlan]}
+            <Badge className="px-3 py-1 text-sm font-bold uppercase tracking-wider bg-primary">
+              {result.recommendedPlan}
             </Badge>
-            <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Recommended Plan</span>
-          </div>
-          <CardTitle className="text-4xl font-bold pt-4">
-            ${result.totalMonthly.toLocaleString()}
-            <span className="text-lg font-normal text-muted-foreground ml-1">/mo</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6 pt-4">
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Base Fee</span>
-              <span className="font-semibold">${result.baseFee.toLocaleString()}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Setup Cost (One-time)</span>
-              <span className="font-semibold">${result.setupFee.toLocaleString()}</span>
-            </div>
-            {result.overageFees > 0 && (
-              <div className="flex justify-between text-sm text-amber-600">
-                <span>Operational Overages</span>
-                <span className="font-semibold">+${result.overageFees.toLocaleString()}</span>
+            {result.savingsVsIndividual && (
+              <div className="flex items-center gap-1 text-emerald-600 font-bold text-xs">
+                <Zap className="w-3 h-3 fill-emerald-600" /> Economia R$ {result.savingsVsIndividual.toLocaleString()}
               </div>
             )}
           </div>
-          <AnimatePresence mode="wait">
-            <motion.div 
-              key={result.recommendedPlan}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="bg-muted/50 p-4 rounded-lg space-y-3"
-            >
-              <h4 className="text-sm font-bold flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                Sales Arguments
-              </h4>
-              <ul className="space-y-2">
-                {result.arguments.map((arg, i) => (
-                  <li key={i} className="text-xs leading-relaxed text-foreground/80 flex gap-2">
-                    <span className="text-emerald-500 mt-0.5">•</span> {arg}
-                  </li>
-                ))}
-              </ul>
-            </motion.div>
-          </AnimatePresence>
-          {result.alerts.length > 0 && (
-            <div className="space-y-2">
-              {result.alerts.map((alert, i) => (
-                <div key={i} className="flex gap-2 text-xs bg-amber-50 text-amber-800 p-2 rounded border border-amber-100">
-                  <AlertTriangle className="w-4 h-4 shrink-0" />
-                  <span>{alert}</span>
+          <CardTitle className="text-5xl font-black pt-6 flex items-baseline gap-1">
+            <span className="text-xl font-bold text-muted-foreground">R$</span>
+            {result.totalMonthly.toLocaleString()}
+            <span className="text-sm font-medium text-muted-foreground">/mês</span>
+          </CardTitle>
+          <p className="text-xs text-muted-foreground font-medium">Investimento inicial: R$ {result.totalInitial.toLocaleString()}</p>
+        </CardHeader>
+        <CardContent className="pt-4">
+          <Tabs defaultValue="breakdown" className="w-full">
+            <TabsList className="grid w-full grid-cols-2 mb-4">
+              <TabsTrigger value="breakdown">Composição</TabsTrigger>
+              <TabsTrigger value="args">Justificativa</TabsTrigger>
+            </TabsList>
+            <TabsContent value="breakdown" className="space-y-3">
+              {result.breakdown.map((item, i) => (
+                <div key={i} className="flex justify-between items-center text-sm border-b border-dashed pb-1">
+                  <span className="text-muted-foreground">{item.label}</span>
+                  <span className="font-mono font-bold">R$ {item.value.toLocaleString()}</span>
                 </div>
               ))}
-            </div>
-          )}
-          {result.savingsVsIndividual && result.savingsVsIndividual > 0 && (
-            <div className="bg-emerald-600 text-white p-3 rounded-lg text-center animate-pulse">
-              <p className="text-xs font-bold uppercase tracking-tighter">Limited Bundle Savings</p>
-              <p className="text-lg font-bold">Save ${result.savingsVsIndividual.toLocaleString()} total</p>
-            </div>
-          )}
+            </TabsContent>
+            <TabsContent value="args" className="space-y-4">
+              <div className="space-y-3">
+                {result.arguments.map((arg, i) => (
+                  <div key={i} className="flex gap-2 text-xs leading-relaxed text-foreground/90">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                    <span>{arg}</span>
+                  </div>
+                ))}
+              </div>
+            </TabsContent>
+          </Tabs>
+          <AnimatePresence>
+            {result.alerts.length > 0 && (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-6 space-y-2">
+                {result.alerts.map((alert, i) => (
+                  <div key={i} className="flex gap-2 p-2 rounded bg-amber-100/50 border border-amber-200 text-[11px] text-amber-900">
+                    <AlertTriangle className="w-4 h-4 shrink-0 text-amber-600" />
+                    {alert}
+                  </div>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </CardContent>
-        <CardFooter className="flex flex-col gap-2 pt-0">
-          <Button className="w-full btn-gradient py-6 text-lg" onClick={() => window.print()}>
-            <ArrowUpRight className="mr-2 w-5 h-5" /> Generate Proposal
+        <CardFooter className="flex flex-col gap-2 pt-0 pb-6">
+          <Button className="w-full bg-primary hover:bg-primary/90 text-white font-bold h-12 text-lg shadow-lg shadow-primary/20" onClick={copyProposal}>
+            <Copy className="mr-2 w-5 h-5" /> Copiar Proposta
           </Button>
-          <Button variant="ghost" className="w-full text-xs text-muted-foreground" onClick={() => {}}>
-            <Copy className="mr-1 w-3 h-3" /> Copy Summary to Clipboard
-          </Button>
+          <p className="text-[10px] text-center text-muted-foreground flex items-center justify-center gap-1">
+            <Info className="w-3 h-3" /> Valores válidos para volume diagnosticado.
+          </p>
         </CardFooter>
       </Card>
     </div>

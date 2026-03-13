@@ -3,7 +3,7 @@ export const PLANS = {
     name: "Essential BPO",
     baseFee: 1621,
     setupFee: 1800,
-    revenueCap: 200000,
+    revenueCap: 200000, // Monthly
     limits: {
       bankSchedules: 20,
       nfse: 20,
@@ -17,7 +17,7 @@ export const PLANS = {
     baseFee: 4730,
     setupFee: 0,
     annualRevenueMin: 4800000,
-    revenueTierUnit: 1000,
+    revenueTierUnit: 1000, // per 1M extra
     limits: {
       bankSchedules: 0,
       nfse: 0,
@@ -37,73 +37,15 @@ export const PLANS = {
     },
     addonUnit: 10,
     meetingUnit: 300,
-    revenueTierUnit: 800,
+    revenueTierUnit: 800, // per 1M extra
   }
 } as const;
-export const SEGMENT_GROUPS = [
-  {
-    label: "Tecnologia / Software",
-    items: [
-      "Startup de Tecnologia",
-      "SaaS (Software como Serviço)",
-      "Empresa de TI / Suporte Tecnológico",
-      "Desenvolvimento Web / Sistemas",
-    ]
-  },
-  {
-    label: "Consultoria",
-    items: [
-      "Consultoria Empresarial",
-      "Consultoria Estratégica",
-      "Consultoria Financeira",
-      "Consultoria Especializada",
-      "Engenharia Consultiva",
-    ]
-  },
-  {
-    label: "Educação / Conteúdo",
-    items: [
-      "Treinamento Corporativo",
-      "Educação / Capacitação Profissional",
-      "Edtech (Tecnologia Educacional)",
-      "Infoprodutor / Produtos Digitais",
-      "Palestrante / Especialista",
-    ]
-  },
-  {
-    label: "Marketing / Criativo",
-    items: [
-      "Agência de Marketing",
-      "Agência de Marketing Digital",
-      "Agência de Publicidade",
-      "Agência de Branding / Design",
-      "Agência de Tráfego Pago",
-      "Produção de Conteúdo",
-      "Produtora Audiovisual",
-      "Design / Projetos Criativos",
-      "Arquitetura / Projetos",
-    ]
-  },
-  {
-    label: "Saúde",
-    items: [
-      "Clínica Médica",
-      "Clínica de Fisioterapia",
-      "Clínica Multidisciplinar",
-      "Clínica Odontológica",
-      "Clínica de Estética",
-    ]
-  },
-  {
-    label: "Serviços Gerais",
-    items: [
-      "Logística (Prestação de Serviços)",
-      "Transportadora",
-      "Empresa de Eventos",
-      "Coworking",
-      "Escritório Profissional Especializado",
-      "Outros Serviços",
-    ]
-  }
-] as const;
-export const SEGMENTS = SEGMENT_GROUPS.flatMap(group => group.items);
+export const SEGMENTS = [
+  "E-commerce",
+  "Indústria",
+  "Serviços",
+  "Varejo",
+  "Tecnologia",
+  "Saúde",
+  "Outros"
+];
