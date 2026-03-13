@@ -4,7 +4,7 @@
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 0 0% 3.9%;
+    --foreground: 222.2 84% 4.9%;
     --primary: 221.2 83.2% 53.3%;
     --primary-foreground: 210 40% 98%;
     --muted: 210 40% 96.1%;
@@ -34,21 +34,25 @@
     print-color-adjust: exact !important;
     background: white !important;
     color: black !important;
-    font-size: 12pt;
+    font-size: 11pt;
   }
   .print-only {
     display: block !important;
   }
+  /* Hide UI noise */
   .print\:hidden,
   header,
-  footer,
+  nav,
+  aside,
   button,
   .tabs-list,
   .sidebar-trigger,
   [role="tablist"],
-  .sonner-toast {
+  .sonner-toast,
+  .theme-toggle {
     display: none !important;
   }
+  /* Reset layout for print */
   .max-w-7xl {
     max-width: 100% !important;
     padding: 0 !important;
@@ -56,6 +60,7 @@
   }
   main {
     padding: 0 !important;
+    margin: 0 !important;
   }
   .grid {
     display: block !important;
@@ -66,10 +71,17 @@
     width: 100% !important;
     margin: 0 !important;
     padding: 0 !important;
+    background: white !important;
+    page-break-inside: avoid;
   }
-  .break-before-page {
-    page-break-before: always !important;
-    padding-top: 1cm !important;
+  /* SVG Color Retention */
+  svg, circle, path {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  /* Break avoidance for clean sections */
+  section {
+    page-break-inside: avoid !important;
   }
   h1, h2, h3, h4 {
     color: #0f172a !important;
@@ -78,12 +90,17 @@
   .text-muted-foreground {
     color: #64748b !important;
   }
+  /* Ensure the custom print footer stays at bottom */
+  .fixed.bottom-0 {
+    position: fixed !important;
+    bottom: 0 !important;
+  }
 }
 @layer base {
   * {
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
   }
 }

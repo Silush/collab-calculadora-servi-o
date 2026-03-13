@@ -27,11 +27,12 @@ const planDisplayNames: Record<PlanType, string> = {
 };
 export function ResultsPanel({ result, activeId }: ResultsPanelProps) {
   const context = useFormContext<DiagnosticInputs>();
-  // Use useWatch for real-time form state subscription - safest pattern for Results Panel
+  // Use useWatch for real-time form state subscription
   const watchedValues = useWatch({
     control: context?.control,
   }) as DiagnosticInputs;
-  const currentInputs = watchedValues || ({} as DiagnosticInputs);
+  // Fix exhaustive-deps lint error by memoizing currentInputs initialization
+  const currentInputs = useMemo(() => watchedValues || ({} as DiagnosticInputs), [watchedValues]);
   const comparison = useMemo(() => {
     if (!currentInputs.companyName && !currentInputs.monthlyRevenue) return [];
     const plans: PlanType[] = ['essential', 'business', 'premium'];
@@ -53,22 +54,18 @@ ERP: ${currentInputs.hasERP === 'yes' ? currentInputs.erpName : 'Não possui'}
 2. DIAGNÓSTICO OPERACIONAL
 Agendamentos Bancários: ${currentInputs.manualBankSchedules}/mês
 Emissões NFSe: ${currentInputs.manualNFSe}/mês
-Boletos: ${currentInputs.monthlyBoletos}/mês
 3. JUSTIFICATIVA TÉCNICA (RECOMENDAÇÃO: ${planName.toUpperCase()})
 ${result.arguments.map(a => `• ${a}`).join('\n')}
 4. COMPOSIÇÃO DO INVESTIMENTO
 ${result.breakdown.map(item => `- ${item.label}: ${formatCurrency(item.value)}`).join('\n')}
 INVESTIMENTO MENSAL TOTAL: ${formatCurrency(result.totalMonthly)}
 INVESTIMENTO INICIAL (IMPLANTAÇÃO): ${formatCurrency(result.totalInitial)}
-${result.savingsVsIndividual ? `EFICIÊNCIA POR UNIFICAÇÃO (ECONOMIA): ${formatCurrency(result.savingsVsIndividual)}` : ''}
-Observações: ${currentInputs.notes || 'Nenhum comentário adicional.'}
 ---
 Emitido por: ${currentInputs.commercialRep}
-Collab Gestão Empresarial | ${today}
-Link da Simulação: ${shareUrl || 'Disponível apenas após salvar'}`;
+Collab Gestão Empresarial | ${today}`;
     try {
       await navigator.clipboard.writeText(text);
-      toast.success("Proposta estruturada copiada para o clipboard!");
+      toast.success("Proposta estruturada copiada!");
     } catch (err) {
       toast.error("Erro ao copiar proposta.");
     }
@@ -83,19 +80,27 @@ Link da Simulação: ${shareUrl || 'Disponível apenas após salvar'}`;
     business: 'border-blue-300 bg-blue-50/30',
     premium: 'border-emerald-500 bg-emerald-50/50',
   };
+  const currentYear = new Date().getFullYear();
   return (
     <div className="sticky top-24 space-y-6 print:static print:top-0">
       <Card className={cn(
-        "overflow-hidden border-2 shadow-xl transition-all duration-500 print:shadow-none print:border-slate-300 print:w-full",
+        "overflow-hidden border-2 shadow-xl transition-all duration-500 print:shadow-none print:border-slate-200 print:w-full print:bg-white",
         planStyles[result.recommendedPlan]
       )}>
-        <div className="hidden print:flex justify-between items-center border-b pb-4 mb-6">
-          <div className="flex items-center gap-3">
-            <CollabLogo size={40} />
-            <h2 className="text-xl font-black text-slate-900 uppercase">Relatório de Diagnóstico</h2>
+        {/* Print Only Header */}
+        <div className="hidden print:flex justify-between items-center border-b border-slate-200 pb-6 mb-8">
+          <div className="flex items-center gap-4">
+            <CollabLogo size={40} printSize={60} />
+            <div>
+              <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tight">Relatório de Diagnóstico</h2>
+              <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">Collab Gestão Empresarial</p>
+            </div>
           </div>
-          <div className="text-right text-[10px] text-muted-foreground">
-            {format(new Date(), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+          <div className="text-right">
+            <div className="text-xs font-bold text-slate-900">Data de Emissão</div>
+            <div className="text-[10px] text-muted-foreground">
+              {format(new Date(), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+            </div>
           </div>
         </div>
         {result.recommendedPlan === 'premium' && (
@@ -109,7 +114,7 @@ Link da Simulação: ${shareUrl || 'Disponível apenas após salvar'}`;
               {planDisplayNames[result.recommendedPlan]}
             </Badge>
           </div>
-          <CardTitle className="text-4xl font-black pt-6 flex items-baseline gap-1 print:pt-0">
+          <CardTitle className="text-4xl font-black pt-6 flex items-baseline gap-1 print:pt-0 print:text-slate-900">
             {formatCurrency(result.totalMonthly)}
             <span className="text-sm font-medium text-muted-foreground">/mês</span>
           </CardTitle>
@@ -151,49 +156,51 @@ Link da Simulação: ${shareUrl || 'Disponível apenas após salvar'}`;
                 ))}
             </TabsContent>
           </Tabs>
-          <div className="hidden print:block space-y-8">
-            <section className="space-y-2">
-              <h3 className="text-sm font-black uppercase text-slate-900 border-b pb-1">1. Diagnóstico do Lead</h3>
-              <div className="grid grid-cols-2 gap-x-12 gap-y-2 text-xs">
-                <div><span className="font-bold">Empresa:</span> {currentInputs.companyName || 'N/A'}</div>
-                <div><span className="font-bold">Segmento:</span> {currentInputs.segment || 'N/A'}</div>
-                <div><span className="font-bold">Lead:</span> {currentInputs.leadName || 'N/A'} ({currentInputs.leadRole || 'N/A'})</div>
-                <div><span className="font-bold">ERP Atual:</span> {currentInputs.hasERP === 'yes' ? currentInputs.erpName : 'Nenhum'}</div>
-                <div><span className="font-bold">Agendamentos:</span> {currentInputs.manualBankSchedules}/mês</div>
-                <div><span className="font-bold">NFSe Emitidas:</span> {currentInputs.manualNFSe}/mês</div>
+          <div className="hidden print:block space-y-10">
+            <section className="space-y-3">
+              <h3 className="text-xs font-black uppercase text-slate-500 tracking-widest border-b pb-1">1. Diagnóstico de Negócio</h3>
+              <div className="grid grid-cols-2 gap-x-12 gap-y-3 text-[11px]">
+                <div><span className="text-slate-500 font-medium">Empresa:</span> <span className="font-bold text-slate-900">{currentInputs.companyName || 'N/A'}</span></div>
+                <div><span className="text-slate-500 font-medium">Segmento:</span> <span className="font-bold text-slate-900">{currentInputs.segment || 'N/A'}</span></div>
+                <div><span className="text-slate-500 font-medium">Lead:</span> <span className="font-bold text-slate-900">{currentInputs.leadName || 'N/A'} ({currentInputs.leadRole || 'N/A'})</span></div>
+                <div><span className="text-slate-500 font-medium">ERP:</span> <span className="font-bold text-slate-900">{currentInputs.hasERP === 'yes' ? currentInputs.erpName : 'Nenhum'}</span></div>
+                <div><span className="text-slate-500 font-medium">Faturamento:</span> <span className="font-bold text-slate-900">{formatCurrency(currentInputs.annualRevenue)}/ano</span></div>
+                <div><span className="text-slate-500 font-medium">Volumetria:</span> <span className="font-bold text-slate-900">{currentInputs.manualBankSchedules} agendamentos | {currentInputs.manualNFSe} NFSe</span></div>
               </div>
             </section>
-            <section className="space-y-2">
-              <h3 className="text-sm font-black uppercase text-slate-900 border-b pb-1">2. Justificativa Estratégica</h3>
+            <section className="space-y-3">
+              <h3 className="text-xs font-black uppercase text-slate-500 tracking-widest border-b pb-1">2. Justificativa Técnica</h3>
               <div className="space-y-2">
                 {result.arguments.map((arg, i) => (
-                  <div key={i} className="flex gap-2 text-xs">
-                    <span>• {arg}</span>
+                  <div key={i} className="flex gap-3 text-[11px] leading-relaxed">
+                    <span className="text-blue-600 font-bold">•</span>
+                    <span className="text-slate-700">{arg}</span>
                   </div>
                 ))}
               </div>
             </section>
-            <section className="space-y-2">
-              <h3 className="text-sm font-black uppercase text-slate-900 border-b pb-1">3. Detalhamento do Investimento</h3>
-              <div className="space-y-2">
+            <section className="space-y-4">
+              <h3 className="text-xs font-black uppercase text-slate-500 tracking-widest border-b pb-1">3. Investimento Proposto</h3>
+              <div className="bg-slate-50 p-4 rounded-lg border border-slate-100">
                 {result.breakdown.map((item, i) => (
-                  <div key={i} className="flex justify-between text-xs py-1 border-b border-slate-100">
-                    <span>{item.label}</span>
-                    <span className="font-bold">{formatCurrency(item.value)}</span>
+                  <div key={i} className="flex justify-between text-[11px] py-1.5 border-b border-slate-200/50 last:border-0">
+                    <span className="text-slate-600">{item.label}</span>
+                    <span className="font-mono font-bold text-slate-900">{formatCurrency(item.value)}</span>
                   </div>
                 ))}
-                <div className="flex justify-between pt-2 text-sm font-black text-primary">
-                  <span>INVESTIMENTO MENSAL TOTAL</span>
+                <div className="flex justify-between pt-4 mt-2 text-sm font-black text-blue-700">
+                  <span className="uppercase">Total Mensal</span>
                   <span>{formatCurrency(result.totalMonthly)}</span>
                 </div>
               </div>
             </section>
-            <div className="flex justify-end pt-24">
+            {/* Print Footer Signature */}
+            <div className="pt-20 flex justify-end">
               <div className="w-64 text-center">
-                <div className="border-t border-slate-900 pt-2 font-bold text-xs">
+                <div className="border-t border-slate-900 pt-3 font-bold text-xs text-slate-900">
                   {currentInputs.commercialRep || 'Consultor Responsável'}
                 </div>
-                <div className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                <div className="text-[9px] text-slate-500 uppercase tracking-[0.2em] mt-1">
                   Collab Gestão Empresarial
                 </div>
               </div>
@@ -213,7 +220,7 @@ Link da Simulação: ${shareUrl || 'Disponível apenas após salvar'}`;
           </AnimatePresence>
         </CardContent>
         <CardFooter className="flex flex-col gap-2 pt-0 pb-6 print:hidden">
-          <Button className="w-full h-12 text-lg font-bold" onClick={copyProposal}>
+          <Button className="w-full h-12 text-lg font-bold shadow-lg shadow-primary/20" onClick={copyProposal}>
             <Copy className="mr-2 w-5 h-5" /> Gerar Proposta
           </Button>
           <div className="grid grid-cols-2 gap-2 w-full">
@@ -221,10 +228,19 @@ Link da Simulação: ${shareUrl || 'Disponível apenas após salvar'}`;
               <Share2 className="mr-2 w-4 h-4" /> Link Direto
             </Button>
             <Button variant="outline" size="sm" onClick={() => window.print()}>
-              <Printer className="mr-2 w-4 h-4" /> Imprimir
+              <Printer className="mr-2 w-4 h-4" /> PDF Proposta
             </Button>
           </div>
         </CardFooter>
+        {/* Global Print Footer (At the bottom of every page) */}
+        <div className="hidden print:flex fixed bottom-0 left-0 right-0 justify-between items-center text-[8px] text-slate-400 border-t border-slate-100 pt-2 bg-white">
+          <div className="flex items-center gap-2">
+            <CollabLogo size={12} glow={false} />
+            <span>Collab Gestão Empresarial © {currentYear}</span>
+          </div>
+          <div>Este documento é uma simulação comercial baseada nos dados fornecidos pelo lead.</div>
+          <div>Página 1 de 1</div>
+        </div>
       </Card>
     </div>
   );
