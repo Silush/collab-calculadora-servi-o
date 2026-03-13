@@ -99,7 +99,6 @@ export function HomePage() {
         })
         .finally(() => setIsInitialLoading(false));
     }
-    // Fixed: removed 'toast' from dependencies to satisfy static analysis
   }, [location.search, reset, activeSimulationId, navigate]);
   const pricingResult = useMemo(() => {
     try {
@@ -119,7 +118,7 @@ export function HomePage() {
       navigate({ search: `?id=${data.id}` }, { replace: true });
       toast.success("Diagnóstico salvo com sucesso!");
     },
-    onError: (err) => toast.error(`Falha técnica: ${err.message}`)
+    onError: (err: any) => toast.error(`Falha técnica: ${err.message}`)
   });
   const handleSave = async () => {
     const isValid = await methods.trigger();
@@ -155,11 +154,11 @@ export function HomePage() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <HistoryDrawer onLoad={(rec) => { 
-              reset(rec.inputs); 
-              setActiveSimulationId(rec.id); 
-              navigate({ search: `?id=${rec.id}` }, { replace: true }); 
-              toast.success(`Diagnóstico de ${rec.inputs.companyName} carregado.`); 
+            <HistoryDrawer onLoad={(rec) => {
+              reset(rec.inputs);
+              setActiveSimulationId(rec.id);
+              navigate({ search: `?id=${rec.id}` }, { replace: true });
+              toast.success(`Diagnóstico de ${rec.inputs.companyName} carregado.`);
             }} />
             <Button variant="ghost" size="sm" onClick={handleReset} className="hidden md:flex">
               <RefreshCcw className="w-4 h-4 mr-2" /> Novo
@@ -173,13 +172,13 @@ export function HomePage() {
       </header>
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
         <FormProvider {...methods}>
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-10 items-start">
             <div className="lg:col-span-7 print:hidden">
               {isInitialLoading ? (
                 <div className="space-y-8">
-                  <Skeleton className="h-[400px] w-full rounded-2xl" />
-                  <Skeleton className="h-[300px] w-full rounded-2xl" />
-                  <Skeleton className="h-[300px] w-full rounded-2xl" />
+                  <Skeleton className="h-[450px] w-full rounded-2xl" />
+                  <Skeleton className="h-[350px] w-full rounded-2xl" />
+                  <Skeleton className="h-[350px] w-full rounded-2xl" />
                 </div>
               ) : (
                 <DiagnosticForm />
@@ -187,10 +186,10 @@ export function HomePage() {
             </div>
             <div className="lg:col-span-5 relative print:col-span-12">
               {isInitialLoading ? (
-                <Skeleton className="h-[600px] w-full rounded-2xl shadow-xl" />
+                <Skeleton className="h-[700px] w-full rounded-2xl shadow-xl" />
               ) : (
-                <ResultsPanel
-                  result={pricingResult}
+                <ResultsPanel 
+                  result={pricingResult} 
                   companyName={formValues.companyName}
                   commercialRep={formValues.commercialRep}
                   activeId={activeSimulationId}

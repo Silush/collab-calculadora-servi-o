@@ -20,14 +20,15 @@ export function calculatePricing(inputs: DiagnosticInputs, forcePlan?: PlanType)
       breakdown: [{ label: "Plano Base", value: p.baseFee, type: 'base' }]
     };
   }
-  const monthlyRevenue = Number(inputs.monthlyRevenue) || 0;
-  const annualRevenue = Number(inputs.annualRevenue) || 0;
+  // Explicit type conversion for safety
+  const monthlyRevenue = Math.max(0, Number(inputs.monthlyRevenue) || 0);
+  const annualRevenue = Math.max(0, Number(inputs.annualRevenue) || 0);
   const needsOps = Boolean(inputs.needsOps);
   const needsStrategic = Boolean(inputs.needsStrategic);
-  const manualBankSchedules = Number(inputs.manualBankSchedules) || 0;
-  const manualNFSe = Number(inputs.manualNFSe) || 0;
-  const monthlyBoletos = Number(inputs.monthlyBoletos) || 0;
-  const meetingHours = Number(inputs.meetingHours) || 0;
+  const manualBankSchedules = Math.max(0, Number(inputs.manualBankSchedules) || 0);
+  const manualNFSe = Math.max(0, Number(inputs.manualNFSe) || 0);
+  const monthlyBoletos = Math.max(0, Number(inputs.monthlyBoletos) || 0);
+  const meetingHours = Math.max(0, Number(inputs.meetingHours) || 0);
   const needsStrategicMeetings = Boolean(inputs.needsStrategicMeetings);
   const needsAnalyticalMeetings = Boolean(inputs.needsAnalyticalMeetings);
   const segment = inputs.segment || "";
@@ -71,9 +72,6 @@ export function calculatePricing(inputs: DiagnosticInputs, forcePlan?: PlanType)
   let revenueSurcharge = 0;
   if (recommendedPlan === 'business' || recommendedPlan === 'premium') {
     const p = plan as typeof PLANS.business | typeof PLANS.premium;
-    // Tiers calculated for every 1M above 4.8M
-    // Fixed threshold logic: if revenue is exactly 4.8M, excess is 0. 
-    // If it's 4.800.001, Math.ceil(1 / 1M) = 1.
     const excessRevenue = Math.max(0, annualRevenue - 4800000);
     const tiers = excessRevenue > 0 ? Math.ceil(excessRevenue / 1000000) : 0;
     revenueSurcharge = tiers * p.revenueTierUnit;
@@ -82,7 +80,6 @@ export function calculatePricing(inputs: DiagnosticInputs, forcePlan?: PlanType)
     }
   }
   // 5. Consulting Hours
-  // Strategic/Analytical meetings add 2 hours each to the base consultative workload
   const totalConsultingHours = meetingHours + (needsStrategicMeetings ? 2 : 0) + (needsAnalyticalMeetings ? 2 : 0);
   const meetingFees = totalConsultingHours * plan.meetingUnit;
   if (meetingFees > 0) {

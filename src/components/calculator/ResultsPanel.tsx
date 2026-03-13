@@ -12,7 +12,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { calculatePricing } from '@/lib/pricing-engine';
 import { PLANS } from '@/lib/plans';
-import { useFormContext, useWatch } from 'react-hook-form';
+import { useWatch } from 'react-hook-form';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 interface ResultsPanelProps {
   result: PricingResult;
@@ -26,24 +26,24 @@ const planDisplayNames: Record<PlanType, string> = {
   premium: 'Premium Finance',
 };
 export function ResultsPanel({ result, activeId }: ResultsPanelProps) {
-  const context = useFormContext<DiagnosticInputs>();
-  const companyName = useWatch({ name: 'companyName' });
-  const leadName = useWatch({ name: 'leadName' });
-  const leadRole = useWatch({ name: 'leadRole' });
-  const annualRevenue = useWatch({ name: 'annualRevenue' });
-  const segment = useWatch({ name: 'segment' });
-  const commercialRep = useWatch({ name: 'commercialRep' });
-  const hasERP = useWatch({ name: 'hasERP' });
-  const erpName = useWatch({ name: 'erpName' });
-  const bankSchedules = useWatch({ name: 'manualBankSchedules' }) || 0;
-  const nfse = useWatch({ name: 'manualNFSe' }) || 0;
-  const boletos = useWatch({ name: 'monthlyBoletos' }) || 0;
-  // Fixed: Added 'context' to dependencies
+  const formValues = useWatch<DiagnosticInputs>();
+  const companyName = formValues.companyName;
+  const leadName = formValues.leadName;
+  const leadRole = formValues.leadRole;
+  const annualRevenue = formValues.annualRevenue;
+  const segment = formValues.segment;
+  const commercialRep = formValues.commercialRep;
+  const hasERP = formValues.hasERP;
+  const erpName = formValues.erpName;
+  const bankSchedules = formValues.manualBankSchedules || 0;
+  const nfse = formValues.manualNFSe || 0;
+  const boletos = formValues.monthlyBoletos || 0;
+  // Comparison table now reacts to EVERY form change because it watches 'formValues'
   const comparison = useMemo(() => {
     if (!companyName && !annualRevenue) return [];
     const plans: PlanType[] = ['essential', 'business', 'premium'];
-    return plans.map(p => calculatePricing(context.getValues(), p));
-  }, [companyName, annualRevenue, context]);
+    return plans.map(p => calculatePricing(formValues as DiagnosticInputs, p));
+  }, [companyName, annualRevenue, formValues]);
   const shareUrl = activeId ? `${window.location.origin}?id=${activeId}` : null;
   const copyProposal = async () => {
     if (!commercialRep) {
@@ -89,12 +89,11 @@ Collab Gestão Empresarial | ${today}`;
   };
   const currentYear = new Date().getFullYear();
   return (
-    <div className="sticky top-24 space-y-6 print:static print:top-0">
+    <div className="lg:sticky lg:top-24 space-y-6 print:static print:top-0">
       <Card className={cn(
         "overflow-hidden border-2 shadow-xl transition-all duration-500 print:shadow-none print:border-slate-200 print:w-full print:bg-white",
         planStyles[result.recommendedPlan]
       )}>
-        {/* Print Header - New Text Branding */}
         <div className="hidden print:flex justify-between items-center border-b-2 border-slate-900 pb-8 mb-10">
           <div>
             <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tighter">COLLAB GESTÃO EMPRESARIAL</h2>
@@ -122,7 +121,7 @@ Collab Gestão Empresarial | ${today}`;
             {formatCurrency(result.totalMonthly)}
             <span className="text-sm font-medium text-muted-foreground">/mês</span>
           </CardTitle>
-          <p className="text-xs text-muted-foreground font-medium">Investimento inicial (Setup): {formatCurrency(result.totalInitial)}</p>
+          <p className="text-xs text-muted-foreground font-medium">Total do 1º Mês (Incluso Setup): {formatCurrency(result.totalInitial)}</p>
         </CardHeader>
         <CardContent className="pt-4 min-h-[300px]">
           <Tabs defaultValue="breakdown" className="w-full print:hidden">
