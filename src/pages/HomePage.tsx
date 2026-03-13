@@ -104,6 +104,7 @@ export function HomePage() {
     try {
       return calculatePricing(formValues);
     } catch (e) {
+      console.error("Pricing calculation error:", e);
       return calculatePricing(defaultValues);
     }
   }, [formValues]);
@@ -188,10 +189,8 @@ export function HomePage() {
               {isInitialLoading ? (
                 <Skeleton className="h-[700px] w-full rounded-2xl shadow-xl" />
               ) : (
-                <ResultsPanel 
-                  result={pricingResult} 
-                  companyName={formValues.companyName}
-                  commercialRep={formValues.commercialRep}
+                <ResultsPanel
+                  result={pricingResult}
                   activeId={activeSimulationId}
                 />
               )}
