@@ -19,7 +19,6 @@ export interface ChatMessage {
   ts: number;
 }
 export interface DiagnosticInputs {
-  [key: string]: any; // Allow index signature for Zod/RHF compatibility
   companyName: string;
   segment: string;
   leadName: string;
@@ -43,6 +42,7 @@ export interface DiagnosticInputs {
   needsBudgeting: boolean;
   needsControllership: boolean;
   meetingHours: number;
+  commercialRep: string;
   notes?: string;
 }
 export type PlanType = 'essential' | 'business' | 'premium';

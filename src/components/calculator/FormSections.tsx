@@ -18,7 +18,7 @@ export function GeneralInfoSection({ register, setValue }: Pick<SectionProps, 'r
   return (
     <Card className="shadow-sm border-slate-200">
       <CardHeader>
-        <CardTitle className="text-lg">Dados Gerais do Lead</CardTitle>
+        <CardTitle className="text-lg font-bold">Dados Gerais do Lead</CardTitle>
       </CardHeader>
       <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-2">
@@ -42,21 +42,16 @@ export function GeneralInfoSection({ register, setValue }: Pick<SectionProps, 'r
           <Label>Faturamento Anual Últ. 12m (R$)</Label>
           <Input type="number" {...register('annualRevenue', { valueAsNumber: true })} />
         </div>
+        <div className="space-y-2">
+          <Label>Responsável Comercial (para assinatura)</Label>
+          <Input {...register('commercialRep')} placeholder="Seu nome para assinatura" />
+        </div>
         <div className="space-y-3">
           <Label>Já possui ERP?</Label>
           <RadioGroup defaultValue="no" onValueChange={(val) => setValue('hasERP', val as "yes" | "no")}>
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="yes" id="erp-yes" /><Label htmlFor="erp-yes">Sim</Label>
               <RadioGroupItem value="no" id="erp-no" /><Label htmlFor="erp-no">Não</Label>
-            </div>
-          </RadioGroup>
-        </div>
-        <div className="space-y-3">
-          <Label>Equipe Financeira Interna?</Label>
-          <RadioGroup defaultValue="no" onValueChange={(val) => setValue('internalFinanceTeam', val as "yes" | "no")}>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="yes" id="fin-yes" /><Label htmlFor="fin-yes">Sim</Label>
-              <RadioGroupItem value="no" id="fin-no" /><Label htmlFor="fin-no">Não</Label>
             </div>
           </RadioGroup>
         </div>
@@ -72,7 +67,7 @@ export function OperationalSection({ control, setValue }: Pick<SectionProps, 'co
   return (
     <Card className="shadow-sm border-slate-200">
       <CardHeader className="flex flex-row items-center justify-between space-y-0">
-        <CardTitle className="text-lg">Volume Operacional</CardTitle>
+        <CardTitle className="text-lg font-bold">Volume Operacional</CardTitle>
         <div className="flex items-center space-x-2">
           <Label className="text-xs text-muted-foreground">Necessita BPO?</Label>
           <Switch checked={!!needsOps} onCheckedChange={(val) => setValue('needsOps', val)} />
@@ -118,7 +113,7 @@ export function StrategicSection({ control, setValue }: Pick<SectionProps, 'cont
   return (
     <Card className="shadow-sm border-slate-200">
       <CardHeader className="flex flex-row items-center justify-between space-y-0">
-        <CardTitle className="text-lg">Necessidades Consultivas</CardTitle>
+        <CardTitle className="text-lg font-bold">Necessidades Consultivas</CardTitle>
         <Switch checked={!!needsStrategic} onCheckedChange={(val) => setValue('needsStrategic', val)} />
       </CardHeader>
       <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">

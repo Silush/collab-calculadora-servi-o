@@ -3,17 +3,21 @@ import { PricingResult } from '@shared/types';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CheckCircle2, AlertTriangle, Copy, Zap, Info } from 'lucide-react';
+import { CheckCircle2, AlertTriangle, Copy, Zap, Info, Printer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import { formatCurrency } from '@/lib/utils';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 interface ResultsPanelProps {
   result: PricingResult;
   companyName: string;
+  commercialRep?: string;
 }
-export function ResultsPanel({ result, companyName }: ResultsPanelProps) {
+export function ResultsPanel({ result, companyName, commercialRep }: ResultsPanelProps) {
   const copyProposal = () => {
+    const today = format(new Date(), "dd/MM/yyyy", { locale: ptBR });
     const text = `PROPOSTA COMERCIAL - COLLAB DEALDESK
 Cliente: ${companyName || 'Lead Diagnosticado'}
 Plano Recomendado: ${result.recommendedPlan.toUpperCase()}
@@ -23,9 +27,13 @@ Implantação: ${formatCurrency(result.setupFee)}
 JUSTIFICATIVA COMERCIAL:
 ${result.arguments.map(a => `- ${a}`).join('\n')}
 COMPOSIÇÃO:
-${result.breakdown.map(b => `- ${b.label}: ${formatCurrency(b.value)}`).join('\n')}`;
+${result.breakdown.map(b => `- ${b.label}: ${formatCurrency(b.value)}`).join('\n')}
+Proposta preparada por: ${commercialRep || 'Consultor Collab'} | Collab Gestão Empresarial | Data: ${today}`;
     navigator.clipboard.writeText(text);
     toast.success("Proposta copiada para o clipboard!");
+  };
+  const handlePrint = () => {
+    window.print();
   };
   const planStyles = {
     essential: 'border-slate-300 ring-slate-400/20 bg-slate-50',
@@ -33,10 +41,10 @@ ${result.breakdown.map(b => `- ${b.label}: ${formatCurrency(b.value)}`).join('\n
     premium: 'border-emerald-500 ring-emerald-400/30 bg-emerald-50/50',
   };
   return (
-    <div className="sticky top-24 space-y-6">
-      <Card className={`overflow-hidden border-2 shadow-xl transition-all duration-500 ${planStyles[result.recommendedPlan]}`}>
+    <div className="sticky top-24 space-y-6 print:static print:top-0">
+      <Card className={`overflow-hidden border-2 shadow-xl transition-all duration-500 ${planStyles[result.recommendedPlan]} print:shadow-none print:border-slate-300`}>
         {result.recommendedPlan === 'premium' && (
-          <div className="bg-emerald-600 text-white text-[10px] font-bold py-1 text-center uppercase tracking-widest animate-pulse">
+          <div className="bg-emerald-600 text-white text-[10px] font-bold py-1 text-center uppercase tracking-widest animate-pulse print:hidden">
             Melhor Custo-Benefício Identificado
           </div>
         )}
@@ -59,7 +67,7 @@ ${result.breakdown.map(b => `- ${b.label}: ${formatCurrency(b.value)}`).join('\n
         </CardHeader>
         <CardContent className="pt-4">
           <Tabs defaultValue="breakdown" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-4">
+            <TabsList className="grid w-full grid-cols-2 mb-4 print:hidden">
               <TabsTrigger value="breakdown">Composição</TabsTrigger>
               <TabsTrigger value="args">Justificativa</TabsTrigger>
             </TabsList>
@@ -71,7 +79,7 @@ ${result.breakdown.map(b => `- ${b.label}: ${formatCurrency(b.value)}`).join('\n
                 </div>
               ))}
             </TabsContent>
-            <TabsContent value="args" className="space-y-4">
+            <TabsContent value="args" className="space-y-4 print:block">
               <div className="space-y-3">
                 {result.arguments.map((arg, i) => (
                   <div key={i} className="flex gap-2 text-xs leading-relaxed text-foreground/90">
@@ -82,9 +90,14 @@ ${result.breakdown.map(b => `- ${b.label}: ${formatCurrency(b.value)}`).join('\n
               </div>
             </TabsContent>
           </Tabs>
+          <div className="hidden print:block mt-8 pt-6 border-t border-slate-200 space-y-2">
+            <p className="text-sm font-bold text-slate-900">{companyName || 'Lead Diagnosticado'}</p>
+            <p className="text-xs text-muted-foreground">Proposta preparada por: <span className="text-foreground font-medium">{commercialRep || 'Consultor Collab'}</span></p>
+            <p className="text-xs text-muted-foreground">Collab Gestão Empresarial | {format(new Date(), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}</p>
+          </div>
           <AnimatePresence>
             {result.alerts.length > 0 && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-6 space-y-2">
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-6 space-y-2 print:hidden">
                 {result.alerts.map((alert, i) => (
                   <div key={i} className="flex gap-2 p-2 rounded bg-amber-100/50 border border-amber-200 text-[11px] text-amber-900">
                     <AlertTriangle className="w-4 h-4 shrink-0 text-amber-600" />
@@ -95,11 +108,14 @@ ${result.breakdown.map(b => `- ${b.label}: ${formatCurrency(b.value)}`).join('\n
             )}
           </AnimatePresence>
         </CardContent>
-        <CardFooter className="flex flex-col gap-2 pt-0 pb-6">
+        <CardFooter className="flex flex-col gap-2 pt-0 pb-6 print:hidden">
           <Button className="w-full bg-primary hover:bg-primary/90 text-white font-bold h-12 text-lg shadow-lg shadow-primary/20" onClick={copyProposal}>
             <Copy className="mr-2 w-5 h-5" /> Copiar Proposta
           </Button>
-          <p className="text-[10px] text-center text-muted-foreground flex items-center justify-center gap-1">
+          <Button variant="outline" className="w-full font-medium" onClick={handlePrint}>
+            <Printer className="mr-2 w-4 h-4" /> Imprimir / PDF
+          </Button>
+          <p className="text-[10px] text-center text-muted-foreground flex items-center justify-center gap-1 mt-2">
             <Info className="w-3 h-3" /> Valores calculados com base no volume diagnosticado.
           </p>
         </CardFooter>
