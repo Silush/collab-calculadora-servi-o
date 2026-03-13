@@ -18,12 +18,12 @@ import { CollabLogo } from '@/components/ui/collab-logo';
 const schema = z.object({
   companyName: z.string().min(1, "Obrigatório"),
   segment: z.string().min(1, "Obrigatório"),
-  leadName: z.string(),
-  leadRole: z.string(),
-  monthlyRevenue: z.number(),
-  annualRevenue: z.number(),
+  leadName: z.string().optional().or(z.literal('')),
+  leadRole: z.string().optional().or(z.literal('')),
+  monthlyRevenue: z.number().min(0),
+  annualRevenue: z.number().min(0),
   hasERP: z.enum(["yes", "no"]),
-  erpName: z.string().optional(),
+  erpName: z.string().optional().or(z.literal('')),
   needsCollabERP: z.enum(["yes", "no"]),
   internalFinanceTeam: z.enum(["yes", "no"]),
   internalOpsTeam: z.enum(["yes", "no"]),
@@ -40,7 +40,7 @@ const schema = z.object({
   needsControllership: z.boolean(),
   meetingHours: z.number(),
   commercialRep: z.string(),
-  notes: z.string().optional(),
+  notes: z.string().optional().or(z.literal('')),
 });
 const defaultValues: DiagnosticInputs = {
   companyName: '',
@@ -76,7 +76,15 @@ export function HomePage() {
     defaultValues,
   });
   const formValues = watch();
-  const pricingResult = useMemo(() => calculatePricing(formValues), [formValues]);
+  const pricingResult = useMemo(() => {
+    try {
+      return calculatePricing(formValues);
+    } catch (e) {
+      console.error("Pricing calculation error:", e);
+      // Return a basic structure to prevent UI crash if engine fails
+      return calculatePricing(defaultValues);
+    }
+  }, [formValues]);
   const saveMutation = useMutation({
     mutationFn: (record: SimulationRecord) => api<SimulationRecord>('/api/simulations', {
       method: 'POST',
@@ -148,7 +156,9 @@ export function HomePage() {
               <h2 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">Diagnóstico Comercial</h2>
               <p className="text-slate-500 mt-2 font-medium">Configure as necessidades operacionais e estratégicas para gerar a proposta.</p>
             </div>
-            <DiagnosticForm register={register} control={control} setValue={setValue} />
+            {control && (
+              <DiagnosticForm register={register} control={control} setValue={setValue} />
+            )}
           </div>
           <div className="lg:col-span-5 relative print:col-span-12">
             <ResultsPanel result={pricingResult} companyName={formValues.companyName} commercialRep={formValues.commercialRep} />
