@@ -10,7 +10,7 @@ import { ResultsPanel } from '@/components/calculator/ResultsPanel';
 import { HistoryDrawer } from '@/components/calculator/HistoryDrawer';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { Toaster } from '@/components/ui/sonner';
-import { RefreshCcw, Save, Loader2, Share2 } from 'lucide-react';
+import { RefreshCcw, Save, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
@@ -22,8 +22,8 @@ const schema = z.object({
   segment: z.string().min(1, "Obrigatório"),
   leadName: z.string(),
   leadRole: z.string(),
-  monthlyRevenue: z.number().min(0),
-  annualRevenue: z.number().min(0),
+  monthlyRevenue: z.coerce.number().min(0).default(0),
+  annualRevenue: z.coerce.number().min(0).default(0),
   hasERP: z.enum(["yes", "no"]),
   erpName: z.string(),
   needsCollabERP: z.enum(["yes", "no"]),
@@ -91,7 +91,7 @@ export function HomePage() {
           setActiveSimulationId(data.id);
           toast.success(`Simulação de ${data.inputs.companyName} carregada via link.`);
         })
-        .catch((err) => toast.error("Não foi possível carregar a simulação compartilhada."))
+        .catch(() => toast.error("Não foi possível carregar a simulação compartilhada."))
         .finally(() => setIsInitialLoading(false));
     }
   }, [searchParams, reset]);
@@ -168,9 +168,9 @@ export function HomePage() {
             {isInitialLoading ? (
               <Skeleton className="h-[500px] w-full" />
             ) : (
-              <ResultsPanel 
-                result={pricingResult} 
-                companyName={formValues.companyName} 
+              <ResultsPanel
+                result={pricingResult}
+                companyName={formValues.companyName}
                 commercialRep={formValues.commercialRep}
                 activeId={activeSimulationId}
               />

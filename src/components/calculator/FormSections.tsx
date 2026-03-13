@@ -17,7 +17,6 @@ import {
   CommandEmpty,
   CommandGroup,
   CommandInput,
-  CommandItem,
   CommandList,
 } from '@/components/ui/command';
 import { cn } from '@/lib/utils';
@@ -110,11 +109,14 @@ export const GeneralInfoSection = React.memo(({ register, control }: SectionProp
                 decimalSeparator=","
                 prefix="R$ "
                 decimalScale={2}
-                fixedDecimalScale
+                fixedDecimalScale={false}
+                formatOnBlur={true}
+                allowEmptyFormatting={true}
+                mask="_"
                 placeholder="R$ 0,00"
                 value={field.value}
-                onValueChange={(values) => field.onChange(values.floatValue || 0)}
-                customInput={(props) => <Input {...props} />}
+                onValueChange={(values) => field.onChange(values.floatValue ?? 0)}
+                customInput={Input}
               />
             )}
           />
@@ -130,11 +132,14 @@ export const GeneralInfoSection = React.memo(({ register, control }: SectionProp
                 decimalSeparator=","
                 prefix="R$ "
                 decimalScale={2}
-                fixedDecimalScale
+                fixedDecimalScale={false}
+                formatOnBlur={true}
+                allowEmptyFormatting={true}
+                mask="_"
                 placeholder="R$ 0,00"
                 value={field.value}
-                onValueChange={(values) => field.onChange(values.floatValue || 0)}
-                customInput={(props) => <Input {...props} />}
+                onValueChange={(values) => field.onChange(values.floatValue ?? 0)}
+                customInput={Input}
               />
             )}
           />
