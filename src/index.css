@@ -21,6 +21,9 @@
     --border: 217.2 32.6% 17.5%;
   }
 }
+.print-only {
+  display: none !important;
+}
 @media print {
   @page {
     margin: 1.5cm;
@@ -31,6 +34,10 @@
     print-color-adjust: exact !important;
     background: white !important;
     color: black !important;
+    font-size: 12pt;
+  }
+  .print-only {
+    display: block !important;
   }
   .print\:hidden,
   header,
@@ -38,7 +45,8 @@
   button,
   .tabs-list,
   .sidebar-trigger,
-  [role="tablist"] {
+  [role="tablist"],
+  .sonner-toast {
     display: none !important;
   }
   .max-w-7xl {
@@ -53,23 +61,22 @@
     display: block !important;
   }
   .card {
-    border: 1px solid #e2e8f0 !important;
+    border: none !important;
     box-shadow: none !important;
     width: 100% !important;
-    margin-bottom: 20px !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
   .break-before-page {
-    page-break-before: always;
-    padding-top: 1cm;
+    page-break-before: always !important;
+    padding-top: 1cm !important;
+  }
+  h1, h2, h3, h4 {
+    color: #0f172a !important;
+    font-weight: 900 !important;
   }
   .text-muted-foreground {
-    color: #4b5563 !important;
-  }
-  /* Force logos and badges to show */
-  .badge {
-    border: 1px solid #000 !important;
-    color: #000 !important;
-    background: transparent !important;
+    color: #64748b !important;
   }
 }
 @layer base {

@@ -7,12 +7,13 @@ import { CheckCircle2, AlertTriangle, Copy, Printer, Share2 } from 'lucide-react
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
-import { formatCurrency, cn } from '@/lib/utils';
+import { formatCurrency, formatBooleanBR, cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { calculatePricing } from '@/lib/pricing-engine';
 import { useFormContext } from 'react-hook-form';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
+import { CollabLogo } from '@/components/ui/collab-logo';
 interface ResultsPanelProps {
   result: PricingResult;
   companyName: string;
@@ -28,29 +29,48 @@ export function ResultsPanel({ result, companyName, commercialRep, activeId }: R
   }, [currentInputs]);
   const shareUrl = activeId ? `${window.location.origin}?id=${activeId}` : null;
   const copyProposal = async () => {
+    if (!currentInputs.commercialRep) {
+      return toast.warning("Identifique-se como 'Responsável Comercial' antes de gerar a proposta.");
+    }
     const today = format(new Date(), "dd/MM/yyyy", { locale: ptBR });
-    const leadInfo = currentInputs.leadName 
-      ? `A/C: ${currentInputs.leadName}${currentInputs.leadRole ? ` (${currentInputs.leadRole})` : ''}` 
-      : '';
     const text = `PROPOSTA COMERCIAL - COLLAB DEALDESK
-Empresa: ${companyName || 'Lead Diagnosticado'}
-${leadInfo}
-Plano Recomendado: ${result.recommendedPlan.toUpperCase()}
-Investimento Mensal: ${formatCurrency(result.totalMonthly)}
-Investimento Inicial (Implantação): ${formatCurrency(result.totalInitial)}
-${shareUrl ? `Acesse a simulação detalhada: ${shareUrl}` : ''}
-JUSTIFICATIVA E GANHOS:
+DADOS DO LEAD:
+Empresa: ${currentInputs.companyName}
+Contato: ${currentInputs.leadName || 'Não informado'} (${currentInputs.leadRole || 'Não informado'})
+Faturamento: Mensal ${formatCurrency(currentInputs.monthlyRevenue)} | Anual ${formatCurrency(currentInputs.annualRevenue)}
+ERP: ${currentInputs.hasERP === 'yes' ? currentInputs.erpName : 'Nenhum'} | Collab ERP: ${formatBooleanBR(currentInputs.needsCollabERP)}
+Equipes: Financeira Interna: ${formatBooleanBR(currentInputs.internalFinanceTeam)} | Operacional: ${formatBooleanBR(currentInputs.internalOpsTeam)}
+Precisa: Operacional: ${formatBooleanBR(currentInputs.needsOps)} | Estratégico: ${formatBooleanBR(currentInputs.needsStrategic)}
+DIAGNÓSTICO OPERACIONAL:
+Agend. Bancários: ${currentInputs.manualBankSchedules}/mês | NFSe: ${currentInputs.manualNFSe}/mês | Boletos: ${currentInputs.monthlyBoletos}/mês
+CONSULTIVO:
+Reuniões Analíticas: ${formatBooleanBR(currentInputs.needsAnalyticalMeetings)} | Reuniões Estratégicas: ${formatBooleanBR(currentInputs.needsStrategicMeetings)}
+Funcionalidades: Dashboard [${formatBooleanBR(currentInputs.needsDashboards)}], DRE [${formatBooleanBR(currentInputs.needsDRE)}], Orç. [${formatBooleanBR(currentInputs.needsBudgeting)}], Controladoria [${formatBooleanBR(currentInputs.needsControllership)}]
+Horas Extras Consultoria: ${currentInputs.meetingHours}h
+RECOMENDAÇÃO: ${result.recommendedPlan.toUpperCase()}
+JUSTIFICATIVA:
 ${result.arguments.map(a => `• ${a}`).join('\n')}
-Preparado por: ${commercialRep || 'Consultor Collab'} | Data: ${today}`;
+INVESTIMENTO:
+${result.breakdown.map(item => `- ${item.label}: ${formatCurrency(item.value)}`).join('\n')}
+Total Mensal: ${formatCurrency(result.totalMonthly)}
+Investimento Inicial (Implantação): ${formatCurrency(result.totalInitial)}
+${result.savingsVsIndividual ? `Economia Estimada: ${formatCurrency(result.savingsVsIndividual)}` : ''}
+Observações: ${currentInputs.notes || 'N/A'}
+Assinado,
+${currentInputs.commercialRep}
+Collab Gestão Empresarial
+Data: ${today}
+Acesse a simulação detalhada: ${shareUrl || 'Simulação não salva'}`;
     try {
       await navigator.clipboard.writeText(text);
-      toast.success("Proposta copiada para o clipboard!");
+      toast.success("Proposta completa copiada para o clipboard!");
     } catch (err) {
       toast.error("Erro ao copiar proposta.");
     }
   };
   const handleShare = async () => {
     if (!activeId) return toast.error("Salve a simulação primeiro para gerar um link.");
+    if (!currentInputs.commercialRep) return toast.warning("Preencha o seu nome como Responsável Comercial antes de compartilhar.");
     await navigator.clipboard.writeText(shareUrl!);
     toast.success("Link de compartilhamento copiado!");
   };
@@ -65,31 +85,41 @@ Preparado por: ${commercialRep || 'Consultor Collab'} | Data: ${today}`;
         "overflow-hidden border-2 shadow-xl transition-all duration-500 print:shadow-none print:border-slate-300 print:w-full",
         planStyles[result.recommendedPlan]
       )}>
+        <div className="hidden print:flex justify-between items-center border-b pb-4 mb-6">
+          <div className="flex items-center gap-3">
+            <CollabLogo size={40} />
+            <h2 className="text-xl font-black text-slate-900">DEALDESK REPORT</h2>
+          </div>
+          <div className="text-right text-[10px] text-muted-foreground">
+            Data: {format(new Date(), "dd/MM/yyyy", { locale: ptBR })}
+          </div>
+        </div>
         {result.recommendedPlan === 'premium' && (
           <div className="bg-emerald-600 text-white text-[10px] font-bold py-1 text-center uppercase tracking-widest print:hidden">
             Recomendação de Alta Eficiência
           </div>
         )}
         <CardHeader className="pb-2">
-          <div className="flex justify-between items-start">
+          <div className="flex justify-between items-start print:hidden">
             <Badge className="px-3 py-1 text-sm font-bold uppercase tracking-wider bg-primary">
               {result.recommendedPlan}
             </Badge>
           </div>
-          <CardTitle className="text-4xl font-black pt-6 flex items-baseline gap-1">
+          <CardTitle className="text-4xl font-black pt-6 flex items-baseline gap-1 print:pt-0">
             {formatCurrency(result.totalMonthly)}
             <span className="text-sm font-medium text-muted-foreground">/mês</span>
           </CardTitle>
           <p className="text-xs text-muted-foreground font-medium">Investimento inicial: {formatCurrency(result.totalInitial)}</p>
         </CardHeader>
         <CardContent className="pt-4 min-h-[300px]">
+          {/* Main Content Sections for Web */}
           <Tabs defaultValue="breakdown" className="w-full print:hidden">
             <TabsList className="grid w-full grid-cols-3 mb-4">
               <TabsTrigger value="breakdown">Composição</TabsTrigger>
               <TabsTrigger value="compare">Planos</TabsTrigger>
               <TabsTrigger value="args">Justificativa</TabsTrigger>
             </TabsList>
-            <TabsContent value="breakdown" className="space-y-3 animate-in fade-in zoom-in-95 duration-200">
+            <TabsContent value="breakdown" className="space-y-3">
               {result.breakdown.map((item, i) => (
                 <div key={i} className="flex justify-between items-center text-sm border-b border-dashed border-slate-200 pb-1">
                   <span className="text-muted-foreground">{item.label}</span>
@@ -97,7 +127,7 @@ Preparado por: ${commercialRep || 'Consultor Collab'} | Data: ${today}`;
                 </div>
               ))}
             </TabsContent>
-            <TabsContent value="compare" className="animate-in fade-in zoom-in-95 duration-200">
+            <TabsContent value="compare">
                <Table>
                   <TableBody>
                     {comparison.map((c) => (
@@ -109,7 +139,7 @@ Preparado por: ${commercialRep || 'Consultor Collab'} | Data: ${today}`;
                   </TableBody>
                </Table>
             </TabsContent>
-            <TabsContent value="args" className="space-y-3 animate-in fade-in zoom-in-95 duration-200">
+            <TabsContent value="args" className="space-y-3">
                {result.arguments.map((arg, i) => (
                   <div key={i} className="flex gap-2 text-xs text-foreground/90">
                     <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
@@ -118,24 +148,60 @@ Preparado por: ${commercialRep || 'Consultor Collab'} | Data: ${today}`;
                 ))}
             </TabsContent>
           </Tabs>
-          <div className="hidden print:block space-y-6 mt-4">
-            <div className="border-t pt-4">
-              <h3 className="text-sm font-bold mb-2 uppercase">Composição do Investimento</h3>
-              {result.breakdown.map((item, i) => (
-                <div key={i} className="flex justify-between text-xs py-1 border-b">
-                  <span>{item.label}</span>
-                  <span className="font-bold">{formatCurrency(item.value)}</span>
-                </div>
-              ))}
-            </div>
-            <div className="break-before-page pt-4">
-              <h3 className="text-sm font-bold mb-2 uppercase">Justificativa Comercial</h3>
+          {/* Print-only detailed breakdown */}
+          <div className="hidden print:block space-y-8">
+            <section className="space-y-2">
+              <h3 className="text-sm font-black uppercase text-slate-900 border-b pb-1">1. Diagnóstico do Lead</h3>
+              <div className="grid grid-cols-2 gap-x-12 gap-y-2 text-xs">
+                <div><span className="font-bold">Empresa:</span> {currentInputs.companyName}</div>
+                <div><span className="font-bold">Segmento:</span> {currentInputs.segment}</div>
+                <div><span className="font-bold">Lead:</span> {currentInputs.leadName} ({currentInputs.leadRole})</div>
+                <div><span className="font-bold">ERP Atual:</span> {currentInputs.hasERP === 'yes' ? currentInputs.erpName : 'Nenhum'}</div>
+                <div><span className="font-bold">Agend. Bancários:</span> {currentInputs.manualBankSchedules}/mês</div>
+                <div><span className="font-bold">NFSe Emitidas:</span> {currentInputs.manualNFSe}/mês</div>
+              </div>
+            </section>
+            <section className="space-y-2">
+              <h3 className="text-sm font-black uppercase text-slate-900 border-b pb-1">2. Justificativa da Recomendação</h3>
               <div className="space-y-2">
                 {result.arguments.map((arg, i) => (
                   <div key={i} className="flex gap-2 text-xs">
                     <span>• {arg}</span>
                   </div>
                 ))}
+              </div>
+            </section>
+            <section className="space-y-2 break-before-page">
+              <h3 className="text-sm font-black uppercase text-slate-900 border-b pb-1">3. Composição do Investimento</h3>
+              <div className="space-y-2">
+                {result.breakdown.map((item, i) => (
+                  <div key={i} className="flex justify-between text-xs py-1 border-b border-slate-100">
+                    <span>{item.label}</span>
+                    <span className="font-bold">{formatCurrency(item.value)}</span>
+                  </div>
+                ))}
+                <div className="flex justify-between pt-2 text-sm font-black">
+                  <span>INVESTIMENTO MENSAL TOTAL</span>
+                  <span>{formatCurrency(result.totalMonthly)}</span>
+                </div>
+              </div>
+            </section>
+            {currentInputs.notes && (
+              <section className="space-y-2">
+                <h3 className="text-sm font-black uppercase text-slate-900 border-b pb-1">Observações</h3>
+                <p className="text-[10px] text-muted-foreground whitespace-pre-wrap italic">
+                  {currentInputs.notes}
+                </p>
+              </section>
+            )}
+            <div className="flex justify-end pt-20">
+              <div className="w-64 text-center">
+                <div className="border-t border-slate-900 pt-2 font-bold text-xs">
+                  {currentInputs.commercialRep || 'Consultor Collab'}
+                </div>
+                <div className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                  Collab Gestão Empresarial
+                </div>
               </div>
             </div>
           </div>
@@ -161,7 +227,7 @@ Preparado por: ${commercialRep || 'Consultor Collab'} | Data: ${today}`;
               <Share2 className="mr-2 w-4 h-4" /> Link Simulação
             </Button>
             <Button variant="outline" size="sm" onClick={() => window.print()}>
-              <Printer className="mr-2 w-4 h-4" /> Gerar PDF
+              <Printer className="mr-2 w-4 h-4" /> Exportar PDF
             </Button>
           </div>
         </CardFooter>

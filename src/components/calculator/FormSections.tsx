@@ -111,12 +111,11 @@ export const GeneralInfoSection = React.memo(({ register, control }: SectionProp
                 prefix="R$ "
                 decimalScale={2}
                 fixedDecimalScale={false}
-                allowEmptyFormatting={true}
-                mask="_"
                 placeholder="R$ 0,00"
                 value={field.value}
                 onValueChange={(values) => field.onChange(values.floatValue ?? 0)}
                 customInput={Input}
+                getInputRef={field.ref}
               />
             )}
           />
@@ -133,12 +132,11 @@ export const GeneralInfoSection = React.memo(({ register, control }: SectionProp
                 prefix="R$ "
                 decimalScale={2}
                 fixedDecimalScale={false}
-                allowEmptyFormatting={true}
-                mask="_"
                 placeholder="R$ 0,00"
                 value={field.value}
                 onValueChange={(values) => field.onChange(values.floatValue ?? 0)}
                 customInput={Input}
+                getInputRef={field.ref}
               />
             )}
           />
@@ -235,7 +233,7 @@ export const GeneralInfoSection = React.memo(({ register, control }: SectionProp
         </AnimatePresence>
         <div className="space-y-2 md:col-span-2">
           <Label>Responsável Comercial (Collab)</Label>
-          <Input {...register('commercialRep')} placeholder="Seu nome para a proposta" />
+          <Input {...register('commercialRep')} placeholder="Seu nome para a assinatura da proposta" />
         </div>
       </CardContent>
     </Card>
