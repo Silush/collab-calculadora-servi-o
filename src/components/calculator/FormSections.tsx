@@ -1,5 +1,5 @@
 import React from 'react';
-import { UseFormRegister, Control, useWatch } from 'react-hook-form';
+import { UseFormRegister, Control, useWatch, UseFormSetValue } from 'react-hook-form';
 import { DiagnosticInputs } from '@shared/types';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,7 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 interface SectionProps {
   register: UseFormRegister<DiagnosticInputs>;
   control: Control<DiagnosticInputs>;
-  setValue: (name: keyof DiagnosticInputs, value: any) => void;
+  setValue: UseFormSetValue<DiagnosticInputs>;
 }
 export function GeneralInfoSection({ register, setValue }: Pick<SectionProps, 'register' | 'setValue'>) {
   return (

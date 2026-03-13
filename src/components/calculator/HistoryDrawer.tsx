@@ -1,56 +1,70 @@
 import React from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { History, Trash2, ArrowRight } from "lucide-react";
+import { History, Trash2, ArrowRight, Loader2 } from "lucide-react";
 import { SimulationRecord } from "@shared/types";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { formatCurrency } from "@/lib/utils";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { api } from "@/lib/api-client";
+import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "sonner";
 interface HistoryDrawerProps {
   onLoad: (record: SimulationRecord) => void;
 }
 export function HistoryDrawer({ onLoad }: HistoryDrawerProps) {
-  const [history, setHistory] = React.useState<SimulationRecord[]>([]);
-  const loadHistory = () => {
-    const saved = localStorage.getItem('dealdesk_history');
-    if (saved) {
-      try {
-        setHistory(JSON.parse(saved));
-      } catch (e) {
-        console.error("Failed to parse history", e);
-      }
+  const queryClient = useQueryClient();
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['simulations'],
+    queryFn: () => api<{ items: SimulationRecord[] }>('/api/simulations'),
+  });
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => api(`/api/simulations/${id}`, { method: 'DELETE' }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['simulations'] });
+      toast.success("Registro removido.");
     }
-  };
-  const clearHistory = () => {
-    localStorage.removeItem('dealdesk_history');
-    setHistory([]);
-  };
+  });
+  const simulations = data?.items ?? [];
   return (
-    <Sheet onOpenChange={(open) => open && loadHistory()}>
+    <Sheet>
       <SheetTrigger asChild>
         <Button variant="outline" size="sm" className="gap-2">
           <History className="w-4 h-4" /> Histórico
         </Button>
       </SheetTrigger>
-      <SheetContent className="w-[400px] sm:w-[540px]">
+      <SheetContent className="w-[400px] sm:w-[540px] overflow-y-auto">
         <SheetHeader className="flex flex-row items-center justify-between mb-6">
           <SheetTitle>Simulações Recentes</SheetTitle>
-          {history.length > 0 && (
-            <Button variant="ghost" size="sm" onClick={clearHistory} className="text-destructive hover:text-destructive">
-              <Trash2 className="w-4 h-4 mr-1" /> Limpar
-            </Button>
-          )}
         </SheetHeader>
         <div className="space-y-4">
-          {history.length === 0 ? (
-            <div className="text-center py-10 text-muted-foreground">Nenhuma simulação salva localmente.</div>
+          {isLoading ? (
+            Array.from({ length: 3 }).map((_, i) => (
+              <Skeleton key={i} className="h-32 w-full rounded-xl" />
+            ))
+          ) : error ? (
+            <div className="text-center py-10 text-destructive text-sm font-medium">
+              Erro ao carregar histórico: {(error as Error).message}
+            </div>
+          ) : simulations.length === 0 ? (
+            <div className="text-center py-10 text-muted-foreground">Nenhuma simulação salva.</div>
           ) : (
-            history.map((record) => (
-              <div key={record.id} className="p-4 border rounded-xl hover:border-primary/50 transition-colors group">
-                <div className="flex justify-between items-start mb-2">
+            simulations.map((record) => (
+              <div key={record.id} className="p-4 border rounded-xl hover:border-primary/50 transition-colors group relative">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:bg-destructive/10"
+                  onClick={() => deleteMutation.mutate(record.id)}
+                  disabled={deleteMutation.isPending}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+                <div className="flex justify-between items-start mb-2 pr-8">
                   <div>
-                    <h4 className="font-bold text-slate-900">{record.inputs.companyName || "Lead sem nome"}</h4>
+                    <h4 className="font-bold text-slate-900 dark:text-slate-100">{record.inputs.companyName || "Lead sem nome"}</h4>
                     <p className="text-xs text-muted-foreground">
                       {format(record.timestamp, "dd 'de' MMMM 'às' HH:mm", { locale: ptBR })}
                     </p>

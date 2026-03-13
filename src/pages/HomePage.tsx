@@ -9,9 +9,11 @@ import { ResultsPanel } from '@/components/calculator/ResultsPanel';
 import { HistoryDrawer } from '@/components/calculator/HistoryDrawer';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { Toaster } from '@/components/ui/sonner';
-import { Calculator, RefreshCcw, Save } from 'lucide-react';
+import { Calculator, RefreshCcw, Save, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { api } from '@/lib/api-client';
 const schema = z.object({
   companyName: z.string().min(1, "Obrigatório"),
   segment: z.string().optional(),
@@ -53,13 +55,27 @@ const defaultValues: DiagnosticInputs = {
   meetingHours: 0,
 };
 export function HomePage() {
+  const queryClient = useQueryClient();
   const { register, control, watch, setValue, reset } = useForm<DiagnosticInputs>({
     resolver: zodResolver(schema),
     defaultValues,
   });
   const formValues = watch();
   const pricingResult = useMemo(() => calculatePricing(formValues), [formValues]);
-  const saveSimulation = () => {
+  const saveMutation = useMutation({
+    mutationFn: (record: SimulationRecord) => api<SimulationRecord>('/api/simulations', {
+      method: 'POST',
+      body: JSON.stringify(record)
+    }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['simulations'] });
+      toast.success("Simulação salva com sucesso!");
+    },
+    onError: (err) => {
+      toast.error(`Erro ao salvar: ${err instanceof Error ? err.message : 'Falha na conexão'}`);
+    }
+  });
+  const handleSave = () => {
     if (!formValues.companyName) {
       toast.error("Insira o nome da empresa para salvar.");
       return;
@@ -70,11 +86,7 @@ export function HomePage() {
       inputs: formValues,
       result: pricingResult,
     };
-    const historyString = localStorage.getItem('dealdesk_history');
-    const history = historyString ? JSON.parse(historyString) : [];
-    const newHistory = [record, ...history].slice(0, 10);
-    localStorage.setItem('dealdesk_history', JSON.stringify(newHistory));
-    toast.success("Simulação salva no histórico local!");
+    saveMutation.mutate(record);
   };
   const loadSimulation = (record: SimulationRecord) => {
     reset(record.inputs);
@@ -99,8 +111,15 @@ export function HomePage() {
             <Button variant="ghost" size="sm" onClick={() => reset(defaultValues)}>
               <RefreshCcw className="w-4 h-4 mr-2" /> Novo
             </Button>
-            <Button variant="default" size="sm" className="hidden sm:flex" onClick={saveSimulation}>
-              <Save className="w-4 h-4 mr-2" /> Salvar Local
+            <Button 
+              variant="default" 
+              size="sm" 
+              className="hidden sm:flex" 
+              onClick={handleSave}
+              disabled={saveMutation.isPending}
+            >
+              {saveMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+              Salvar Nuvem
             </Button>
           </div>
         </div>
@@ -116,9 +135,6 @@ export function HomePage() {
           </div>
           <div className="lg:col-span-5 relative">
             <ResultsPanel result={pricingResult} companyName={formValues.companyName} />
-            <div className="mt-6 sm:hidden">
-              <Button className="w-full" onClick={saveSimulation}>Salvar Simulação</Button>
-            </div>
           </div>
         </div>
       </main>

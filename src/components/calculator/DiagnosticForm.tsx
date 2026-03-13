@@ -15,17 +15,15 @@ export function DiagnosticForm({ register, control, setValue }: DiagnosticFormPr
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <GeneralInfoSection
         register={register}
-        control={control}
-        setValue={(name, val) => setValue(name as any, val)}
+        setValue={setValue}
       />
       <OperationalSection
-        register={register}
         control={control}
-        setValue={(name, val) => setValue(name as any, val)}
+        setValue={setValue}
       />
       <StrategicSection
         control={control}
-        setValue={(name, val) => setValue(name as any, val)}
+        setValue={setValue}
       />
       <Card className="shadow-sm border-slate-200">
         <CardContent className="pt-6 space-y-2">

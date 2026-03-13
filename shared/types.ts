@@ -19,6 +19,7 @@ export interface ChatMessage {
   ts: number;
 }
 export interface DiagnosticInputs {
+  [key: string]: any; // Allow index signature for Zod/RHF compatibility
   companyName: string;
   segment: string;
   leadName: string;
@@ -32,11 +33,9 @@ export interface DiagnosticInputs {
   internalOpsTeam: "yes" | "no";
   needsOps: boolean;
   needsStrategic: boolean;
-  // Operational Data
   manualBankSchedules: number;
   manualNFSe: number;
   monthlyBoletos: number;
-  // Strategic Data
   needsAnalyticalMeetings: boolean;
   needsStrategicMeetings: boolean;
   needsDashboards: boolean;
