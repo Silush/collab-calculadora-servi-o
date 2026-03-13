@@ -27,11 +27,9 @@ const planDisplayNames: Record<PlanType, string> = {
 };
 export function ResultsPanel({ result, activeId }: ResultsPanelProps) {
   const context = useFormContext<DiagnosticInputs>();
-  // Use useWatch for real-time form state subscription
   const watchedValues = useWatch({
     control: context?.control,
   }) as DiagnosticInputs;
-  // Fix exhaustive-deps lint error by memoizing currentInputs initialization
   const currentInputs = useMemo(() => watchedValues || ({} as DiagnosticInputs), [watchedValues]);
   const comparison = useMemo(() => {
     if (!currentInputs.companyName && !currentInputs.monthlyRevenue) return [];
@@ -48,14 +46,14 @@ export function ResultsPanel({ result, activeId }: ResultsPanelProps) {
     const text = `PROPOSTA COMERCIAL - COLLAB DEALDESK
 1. DADOS DO LEAD
 Empresa: ${currentInputs.companyName || 'N/A'}
-Contato: ${currentInputs.leadName || 'N/A'} (${currentInputs.leadRole || 'N/A'})
+Contato: ${currentInputs.leadName || 'Não Informado'} (${currentInputs.leadRole || 'Cargo não informado'})
 Faturamento: Mensal ${formatCurrency(currentInputs.monthlyRevenue)} | Anual ${formatCurrency(currentInputs.annualRevenue)}
 ERP: ${currentInputs.hasERP === 'yes' ? currentInputs.erpName : 'Não possui'}
 2. DIAGNÓSTICO OPERACIONAL
-Agendamentos Bancários: ${currentInputs.manualBankSchedules}/mês
-Emissões NFSe: ${currentInputs.manualNFSe}/mês
+Agendamentos Bancários: ${currentInputs.manualBankSchedules || 0}/mês
+Emissões NFSe: ${currentInputs.manualNFSe || 0}/mês
 3. JUSTIFICATIVA TÉCNICA (RECOMENDAÇÃO: ${planName.toUpperCase()})
-${result.arguments.map(a => `• ${a}`).join('\n')}
+${result.arguments.length > 0 ? result.arguments.map(a => `• ${a}`).join('\n') : '• Solução customizada para as necessidades operacionais identificadas.'}
 4. COMPOSIÇÃO DO INVESTIMENTO
 ${result.breakdown.map(item => `- ${item.label}: ${formatCurrency(item.value)}`).join('\n')}
 INVESTIMENTO MENSAL TOTAL: ${formatCurrency(result.totalMonthly)}
@@ -68,6 +66,7 @@ Collab Gestão Empresarial | ${today}`;
       toast.success("Proposta estruturada copiada!");
     } catch (err) {
       toast.error("Erro ao copiar proposta.");
+      console.error(err);
     }
   };
   const handleShare = async () => {
@@ -162,21 +161,25 @@ Collab Gestão Empresarial | ${today}`;
               <div className="grid grid-cols-2 gap-x-12 gap-y-3 text-[11px]">
                 <div><span className="text-slate-500 font-medium">Empresa:</span> <span className="font-bold text-slate-900">{currentInputs.companyName || 'N/A'}</span></div>
                 <div><span className="text-slate-500 font-medium">Segmento:</span> <span className="font-bold text-slate-900">{currentInputs.segment || 'N/A'}</span></div>
-                <div><span className="text-slate-500 font-medium">Lead:</span> <span className="font-bold text-slate-900">{currentInputs.leadName || 'N/A'} ({currentInputs.leadRole || 'N/A'})</span></div>
+                <div><span className="text-slate-500 font-medium">Lead:</span> <span className="font-bold text-slate-900">{currentInputs.leadName || 'Não Informado'} ({currentInputs.leadRole || 'N/A'})</span></div>
                 <div><span className="text-slate-500 font-medium">ERP:</span> <span className="font-bold text-slate-900">{currentInputs.hasERP === 'yes' ? currentInputs.erpName : 'Nenhum'}</span></div>
                 <div><span className="text-slate-500 font-medium">Faturamento:</span> <span className="font-bold text-slate-900">{formatCurrency(currentInputs.annualRevenue)}/ano</span></div>
-                <div><span className="text-slate-500 font-medium">Volumetria:</span> <span className="font-bold text-slate-900">{currentInputs.manualBankSchedules} agendamentos | {currentInputs.manualNFSe} NFSe</span></div>
+                <div><span className="text-slate-500 font-medium">Volumetria:</span> <span className="font-bold text-slate-900">{currentInputs.manualBankSchedules || 0} agendamentos | {currentInputs.manualNFSe || 0} NFSe</span></div>
               </div>
             </section>
             <section className="space-y-3">
               <h3 className="text-xs font-black uppercase text-slate-500 tracking-widest border-b pb-1">2. Justificativa Técnica</h3>
               <div className="space-y-2">
-                {result.arguments.map((arg, i) => (
+                {result.arguments.length > 0 ? result.arguments.map((arg, i) => (
                   <div key={i} className="flex gap-3 text-[11px] leading-relaxed">
                     <span className="text-blue-600 font-bold">•</span>
                     <span className="text-slate-700">{arg}</span>
                   </div>
-                ))}
+                )) : (
+                  <div className="text-[11px] text-slate-700 leading-relaxed italic">
+                    Solução customizada baseada nos parâmetros de volume e faturamento declarados.
+                  </div>
+                )}
               </div>
             </section>
             <section className="space-y-4">
@@ -194,7 +197,6 @@ Collab Gestão Empresarial | ${today}`;
                 </div>
               </div>
             </section>
-            {/* Print Footer Signature */}
             <div className="pt-20 flex justify-end">
               <div className="w-64 text-center">
                 <div className="border-t border-slate-900 pt-3 font-bold text-xs text-slate-900">
@@ -232,7 +234,6 @@ Collab Gestão Empresarial | ${today}`;
             </Button>
           </div>
         </CardFooter>
-        {/* Global Print Footer (At the bottom of every page) */}
         <div className="hidden print:flex fixed bottom-0 left-0 right-0 justify-between items-center text-[8px] text-slate-400 border-t border-slate-100 pt-2 bg-white">
           <div className="flex items-center gap-2">
             <CollabLogo size={12} glow={false} />

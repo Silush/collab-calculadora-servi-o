@@ -127,10 +127,11 @@ export const GeneralInfoSection = React.memo(({ register, control }: SectionProp
                 decimalSeparator=","
                 prefix="R$ "
                 decimalScale={2}
-                fixedDecimalScale={false}
+                fixedDecimalScale={true}
                 placeholder="R$ 0,00"
                 value={field.value}
                 onValueChange={(values) => field.onChange(values.floatValue ?? 0)}
+                onBlur={field.onBlur}
                 customInput={Input}
                 getInputRef={field.ref}
                 className="bg-slate-50/50"
@@ -149,10 +150,11 @@ export const GeneralInfoSection = React.memo(({ register, control }: SectionProp
                 decimalSeparator=","
                 prefix="R$ "
                 decimalScale={2}
-                fixedDecimalScale={false}
+                fixedDecimalScale={true}
                 placeholder="R$ 0,00"
                 value={field.value}
                 onValueChange={(values) => field.onChange(values.floatValue ?? 0)}
+                onBlur={field.onBlur}
                 customInput={Input}
                 getInputRef={field.ref}
                 className="bg-slate-50/50"
@@ -252,7 +254,11 @@ export const GeneralInfoSection = React.memo(({ register, control }: SectionProp
         </AnimatePresence>
         <div className="space-y-2 md:col-span-2 pt-2 border-t">
           <Label className="font-bold text-slate-700">Responsável Comercial (Collab)</Label>
-          <Input {...register('commercialRep')} placeholder="Seu nome para a assinatura da proposta" className="bg-blue-50/30 border-blue-100" />
+          <Input 
+            {...register('commercialRep')} 
+            placeholder="Seu nome para a assinatura da proposta" 
+            className="bg-blue-50/30 border-blue-100 focus:ring-blue-500 focus:border-blue-500 transition-all" 
+          />
         </div>
       </CardContent>
     </Card>
@@ -269,7 +275,7 @@ interface VolumeControlProps {
 const VolumeControl = ({ label, name, control, setValue, suffix }: VolumeControlProps) => {
   const value = useWatch({ control, name: name as any }) as number ?? 0;
   const updateValue = (newVal: number) => {
-    setValue(name as any, Math.max(0, newVal));
+    setValue(name as any, Math.max(0, newVal), { shouldDirty: true, shouldTouch: true });
   };
   return (
     <div className="space-y-4 p-5 bg-slate-50/80 rounded-2xl border border-slate-200/60 transition-all hover:bg-slate-100/50">
@@ -284,7 +290,7 @@ const VolumeControl = ({ label, name, control, setValue, suffix }: VolumeControl
           type="button"
           variant="outline"
           size="icon"
-          className="h-11 w-11 shrink-0 border-slate-300 shadow-sm bg-white"
+          className="h-11 w-11 shrink-0 border-slate-300 shadow-sm bg-white hover:bg-slate-50 active:scale-95 transition-all"
           onClick={() => updateValue(value - 1)}
           disabled={value <= 0}
         >
@@ -294,14 +300,17 @@ const VolumeControl = ({ label, name, control, setValue, suffix }: VolumeControl
           type="number"
           className="text-center font-mono font-black text-xl h-11 border-slate-300 focus-visible:ring-blue-500 bg-white"
           value={value}
-          onChange={(e) => updateValue(parseInt(e.target.value) || 0)}
+          onChange={(e) => {
+            const val = parseInt(e.target.value);
+            updateValue(isNaN(val) ? 0 : val);
+          }}
           min={0}
         />
         <Button
           type="button"
           variant="outline"
           size="icon"
-          className="h-11 w-11 shrink-0 border-slate-300 shadow-sm bg-white"
+          className="h-11 w-11 shrink-0 border-slate-300 shadow-sm bg-white hover:bg-slate-50 active:scale-95 transition-all"
           onClick={() => updateValue(value + 1)}
         >
           <Plus className="h-4 w-4" />
@@ -318,7 +327,7 @@ export const OperationalSection = React.memo(({ control, setValue }: Pick<Sectio
         <CardTitle className="text-xl font-black text-slate-800">Volume Operacional</CardTitle>
         <div className="flex items-center space-x-2">
           <Label className="text-xs font-bold text-muted-foreground uppercase tracking-tight">Ativar BPO?</Label>
-          <Switch checked={!!needsOps} onCheckedChange={(val) => setValue('needsOps', val)} />
+          <Switch checked={!!needsOps} onCheckedChange={(val) => setValue('needsOps', val, { shouldDirty: true })} />
         </div>
       </CardHeader>
       <CardContent className="space-y-6 pt-4">
@@ -365,7 +374,7 @@ export const StrategicSection = React.memo(({ control, setValue }: Pick<SectionP
         <CardTitle className="text-xl font-black text-slate-800">Necessidades Consultivas</CardTitle>
         <div className="flex items-center space-x-2">
           <Label className="text-xs font-bold text-muted-foreground uppercase tracking-tight">Ativar CFO?</Label>
-          <Switch checked={!!needsStrategic} onCheckedChange={(val) => setValue('needsStrategic', val)} />
+          <Switch checked={!!needsStrategic} onCheckedChange={(val) => setValue('needsStrategic', val, { shouldDirty: true })} />
         </div>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -376,7 +385,7 @@ export const StrategicSection = React.memo(({ control, setValue }: Pick<SectionP
               <Switch
                 disabled={!needsStrategic}
                 checked={!!(allValues as any)[item.name]}
-                onCheckedChange={(val) => setValue(item.name as any, val)}
+                onCheckedChange={(val) => setValue(item.name as any, val, { shouldDirty: true })}
               />
             </div>
           ))}

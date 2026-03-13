@@ -14,13 +14,12 @@ export function CollabLogo({ className, size = 40, printSize, glow = true }: Col
         glow && "hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)] transition-all duration-300",
         className
       )}
-      style={{ 
-        width: 'var(--logo-size)', 
+      style={{
+        width: 'var(--logo-size)',
         height: 'var(--logo-size)',
-        // Use CSS variables to handle the printSize override via media query or inline
-        // @ts-ignore - custom property
+        // @ts-expect-error - Custom CSS properties require explicit override or casting in React.CSSProperties
         '--logo-size': `${size}px`,
-        // @ts-ignore - custom property
+        // @ts-expect-error - Custom CSS properties require explicit override or casting in React.CSSProperties
         '--print-logo-size': `${printSize || size}px`
       } as React.CSSProperties}
     >
@@ -61,9 +60,7 @@ export function CollabLogo({ className, size = 40, printSize, glow = true }: Col
             </feMerge>
           </filter>
         </defs>
-        {/* Outer Circle with subtle depth */}
         <circle cx="50" cy="50" r="48" fill="url(#circle-grad)" stroke="#E2E8F0" strokeWidth="1" />
-        {/* The Bold "C" Path */}
         <path
           d="M72 32C67.5 26.5 60 23 51 23C34 23 21 35 21 50C21 65 34 77 51 77C60 77 67.5 73.5 72 68"
           stroke="url(#c-grad)"
@@ -72,7 +69,6 @@ export function CollabLogo({ className, size = 40, printSize, glow = true }: Col
           fill="none"
           filter="url(#shadow)"
         />
-        {/* Gold/White Accent Inner Rim for "Premium" look */}
         <path
           d="M68 36C64 32.5 58 30 51 30C38 30 28 39 28 50C28 61 38 70 51 70C58 70 64 67.5 68 64"
           stroke="white"
